@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Bot</title>
+    <style>
+        .custom-chatbot {
+            --message-bg-user: #bccad1;
+            --message-color-user: #ffffff;
+            --message-bg-bot: #f7f8ff;
+            --message-color-bot: #303235;
+            --input-bg: rgba(255,255,255,0.8);
+            --input-border: #ddd;
+        }
+
+        .custom-chatbot::part(base),
+        .custom-chatbot::part(container) {
+            background: transparent !important;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-color: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chatbot-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 確保聊天窗口填滿容器 */
+        .custom-chatbot {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        .custom-footer {
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #303235;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        
+        .custom-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <flowise-fullchatbot class="custom-chatbot"></flowise-fullchatbot>
+    </div>
+    
+    <div class="custom-footer">
+        <!--Powered by <a href="mailto:ang@ang.com">ang</a>-->
+        回答僅供參考，請善盡查證義務，並遵循當地法律法規。
+    </div>
+
+    <script>
+        // 獲取 URL 參數
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+        
+        const CHATBOT_CONFIG = {            
+            // 頭像設定
+            avatars: {
+                bot: 'texture/bot.png',
+                user: 'texture/user.png',
+                showBotAvatar: true,
+                showUserAvatar: true,
+                avatarSize: '28px'
+            },
+
+            // 顏色設定
+            colors: {
+                userBubble: '#bbc4cc',
+                userText: '#101010',
+                botBubble: '#f7f8ff',
+                botText: '#303235'
+            },
+
+            // 字體大小設定
+            fontSize: {
+                messages: "20px",  // 調整為較合適的大小
+                welcome: "20px",  // 調整歡迎訊息大小
+                input: "20px"     // 調整輸入框大小
+            },
+
+            // 歡迎訊息
+            welcomeMessage: '<span style="font-size: 24px;">早！</span><br> 我們來聊聊建築技術規則和台中的建管規定如何？',
+            
+            // 從 URL 參數獲取 chatflowId，如果沒有則使用默認值
+            chatflowId: getUrlParameter('chatflowid') || "c8dc18ab-627a-4a79-8192-1521875e65e5",
+            apiHost: "https://aibookrates.onrender.com",
+        };
+
+        // 添加滾動監聽函數
+        function setupScrollListener() {
+            const chatContainer = document.querySelector('.custom-chatbot').shadowRoot
+                .querySelector('.relative.h-full');
+            
+            if (chatContainer) {
+                chatContainer.addEventListener('scroll', function() {
+                    window.parent.postMessage({
+                        type: 'chatScroll',
+                        scrollTop: this.scrollTop
+                    }, '*');
+                });
+            }
+        }
+
+        // 等待 chatbot 完全加載後設置監聽器
+        setTimeout(setupScrollListener, 1000);
+    </script>
+
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+        
+        Chatbot.initFull({
+            chatflowid: CHATBOT_CONFIG.chatflowId,
+            apiHost: CHATBOT_CONFIG.apiHost,
+            theme: {                            
+                chatWindow: {
+                    showTitle: true,
+                    backgroundColor: 'transparent',
+                    welcomeMessage: CHATBOT_CONFIG.welcomeMessage,
+                    fontSize: 22,
+                    renderHTML: true,
+                    botMessage: {
+                        backgroundColor: CHATBOT_CONFIG.colors.botBubble,
+                        textColor: CHATBOT_CONFIG.colors.botText,
+                        showAvatar: CHATBOT_CONFIG.avatars.showBotAvatar,
+                        avatarSrc: CHATBOT_CONFIG.avatars.bot,
+                       
+                    },
+                    userMessage: {
+                        backgroundColor: CHATBOT_CONFIG.colors.userBubble,
+                        textColor: CHATBOT_CONFIG.colors.userText,
+                        showAvatar: CHATBOT_CONFIG.avatars.showUserAvatar,
+                        avatarSrc: CHATBOT_CONFIG.avatars.user,
+                    },
+                    titleBackgroundColor: 'transparent',  // 標題背景變透明
+                    //title: '123',
+                    titleTextColor: '#000000',
+                    //titleAvatarSrc: 'texture/user.png',
+                    textInput: {
+                        placeholder: '請輸入您的問題',
+                        backgroundColor: '#ffffff',
+                        textColor: '#303235',
+                        autoFocus: true
+                    }
+                },
+                footer: {
+                    text: ''
+                }
+            },
+            customCSS: ``
+        })
+    </script>
+</body>
+</html>
