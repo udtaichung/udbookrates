@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 基本樣式設定 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0; /* 移除上下的 padding */
+            min-height: 100%;
+            width: 100%;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+        }
+        
+        /* 控制容器樣式 */
+        .controls-container {
+            width: 90%;
+            max-width: 1600px;
+            padding: 0; /* 移除內部 padding */
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 下拉選單分隔線樣式 */
+        .chain-selector select option:disabled {
+         font-weight: normal;
+         color: #999;
+         background-color: #f0f0f0;
+        }
+
+        /* 標題樣式 */
+        .title {
+            font-size: 36px;
+            color: #333;
+            flex: 1;
+            text-align: left;
+            white-space: nowrap; /* 防止標題斷行 */
+            margin: 0; /* 移除標題的 margin */
+        }
+        
+        /* @ 符號樣式 */
+        .title span.at {
+            font-size: 24px;
+            vertical-align: middle;
+        }
+        
+        /* 選擇器樣式 */
+        .chain-selector {
+            width: auto;
+            max-width: 400px;
+            margin: 0; /* 移除 margin */
+        }
+        
+        /* 下拉選單樣式 */
+        .chain-selector select {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(221, 221, 221, 0.5);
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        /* 設定所有 optgroup 的基本樣式 */
+        optgroup {
+            font-weight: bold;
+            }
+
+        /* 為直覺型設定藍色 */
+        optgroup[label*="直覺型"] {
+            color: #2c5ea9; /* 藍色 */
+            }
+
+        /* 為思考型設定橙色 */
+        optgroup[label*="思考型"] {
+            color: #f57f17; /* 橙色 */
+            }
+
+        /* 為智能助手設定綠色 */
+        optgroup[label*="Agent"] {
+            color: #2e7d32; /* 綠色 */
+            }
+
+        /* 確保選項保持原來的顏色 */
+        option {
+            color: initial; /* 使用初始顏色，不受 optgroup 顏色影響 */
+            }    
+            
+        /* 開關按鈕容器樣式 */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            margin: 0; /* 移除 margin */
+        }
+        
+        /* 開關按鈕外層樣式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 130px;
+            height: 34px;
+        }
+        
+        /* 隱藏原始核取方塊 */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        /* 滑動器樣式 */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2196F3; /* 藍色背景 - 預設為「說明文件」 */
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        /* 滑動器圓形按鈕 */
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        /* 選中狀態的背景色 */
+        input:checked + .slider {
+            background-color: #4CAF50; /* 綠色背景 - 變更為「CHATBOT」 */
+        }
+        
+        /* 選中狀態的按鈕位置 */
+        input:checked + .slider:before {
+            transform: translateX(95px);
+        }
+        
+        /* 滑動器文字樣式 */
+        .slider-text {
+            color: white;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            font-size: 14px;
+        }
+
+        /* 控制項行樣式 */
+        .controls-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin: 0; /* 移除 margin */
+        }
+
+        /* 手機版樣式設定 */
+        @media only screen and (max-width: 768px) {
+            /* 手機版控制容器垂直排列 */
+            .controls-container {
+                flex-direction: column;
+                align-items: center;
+                padding: 0; /* 確保在手機版也沒有 padding */
+            }
+            
+            /* 手機版標題樣式 */
+            .title {
+                font-size: 20px; /* 調小字體以確保一行顯示 */
+                text-align: center;
+                width: 100%;
+                margin: 2px 0; /* 減少標題的 margin */
+                white-space: nowrap; /* 確保不斷行 */
+            }
+            
+            /* 手機版 @ 符號樣式 */
+            .title span.at {
+                font-size: 14px;
+            }
+            
+            /* 手機版控制項行 */
+            .mobile-controls {
+                display: flex;
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+                margin: 0; /* 移除 margin */
+                gap: 20px; /* 保持間距 */
+            }
+            
+            /* 手機版開關按鈕縮小 */
+            .toggle-switch {
+                transform: scale(0.8);
+                margin: 0; /* 移除 margin */
+            }
+            
+            /* 手機版選擇器縮小 */
+            .chain-selector {
+                transform: scale(0.8);
+                margin: 0; /* 移除 margin */
+                width: auto;
+            }
+            
+            /* 手機版下拉選單文字縮小 */
+            .chain-selector select {
+                font-size: 16px;
+                padding: 8px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls-container" id="controlsContainer">
+        <!-- 標題區塊 -->
+        <div class="title">建築技術規則 <span class="at">@</span> 台中建管 AI</div>
+        
+        <!-- 控制項在手機版會放入此 div -->
+        <div class="mobile-controls">
+            <!-- 模式切換開關 -->
+            <div class="toggle-switch">
+                <label class="switch">
+                    <input type="checkbox" id="modeToggle">
+                    <span class="slider">
+                        <span class="slider-text">說明文件</span>
+                    </span>
+                </label>
+            </div>
+            
+            <!-- LLM 模型選擇下拉選單 -->
+            <div class="chain-selector">
+                <select id="chainSelector">
+                    <optgroup label="➤➤➤ 直覺型 LLM">
+                        <!--<option disabled style="color: #2c5ea9;">➤➤➤ 直覺型 🙂 </option> -->
+                        <option value="c8dc18ab-627a-4a79-8192-1521875e65e5" selected>🥉Claude Sonnet 3.7 </option>
+                        <option value="44a6b58e-d6b8-43c5-ab7e-2558925e09d0">🥈GPT 4.1 (會找網路資料) </option>
+                        <option value="28265c21-827f-42d8-9cfb-b49ef6a89aba">🔹Deepseek v3 </option>
+                        <option value="988483dd-ec11-462c-b2c3-b71c17aabd10">🔹Gemini 2.5 pro </option>
+                    </optgroup>
+                    <optgroup label="➤➤➤ 思考型 LLM">
+                        <!--<option disabled style="color: #f57f17;">➤➤➤ 思考型 🤔</option> -->
+                        <option value="dc22907f-0496-40a6-93ab-b77bc2fe3984">🔸Claude Sonnet 3.7 Thinking </option>
+                        <option value="7e9f10f8-af3a-495e-8a24-c9c76c359abe">🥇Microsoft: MAI DS R1 </option>
+                        <option value="97bebc44-93d8-49f2-939b-3a05a0677b1e">🔸Qwen QwQ </option>
+                        <option value="ac41f412-8ff8-4c76-90c6-9409fe4b3e19">🔸xAI Grok 3 </option>
+                        <option value="f2d83ff2-c3f8-4f41-8487-36f843c58549">🔸Deepseek R1 </option>
+                        <option value="508ef3c1-4038-4f36-90fa-ea10d7b83443">🔸Deepseek prover v2 🆕</option>
+                        <option value="97f5d567-82d4-486d-af0d-327738b84bb0">🔸Gemini 2.5 flash Thinking </option>
+                    </optgroup>
+                    <optgroup label="➤➤➤ Agent ">
+                        <!-- <option disabled style="color: #2e7d32;">➤➤➤ Agent 😎</option> -->
+                        <option value="8d39f4ca-5790-46d7-a968-f11cb828bd80">🔰Claude Sonnet 3.7 (會找網路資料)</option>
+                    </optgroup>
+                    <!-- <option value="8d39f4ca-5790-46d7-a968-f11cb828bd80" disabled>LLM：newest</option> -->
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 檢測是否為手機裝置，並調整布局
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                  (window.innerWidth <= 768);
+        }
+        
+        // 在頁面載入和視窗大小改變時調整布局
+        function adjustLayout() {
+            const container = document.getElementById('controlsContainer');
+            const title = document.querySelector('.title');
+            const mobileControls = document.querySelector('.mobile-controls');
+            const toggleSwitch = document.querySelector('.toggle-switch');
+            const chainSelector = document.querySelector('.chain-selector');
+            
+            if (isMobileDevice()) {
+                // 將開關和選擇器移到 mobile-controls 中
+                if (!mobileControls.contains(toggleSwitch)) {
+                    mobileControls.appendChild(toggleSwitch);
+                }
+                if (!mobileControls.contains(chainSelector)) {
+                    mobileControls.appendChild(chainSelector);
+                }
+            } else {
+                // 桌面版布局：將開關和選擇器直接放在 container 中
+                if (!container.contains(toggleSwitch) || mobileControls.contains(toggleSwitch)) {
+                    container.appendChild(toggleSwitch);
+                }
+                if (!container.contains(chainSelector) || mobileControls.contains(chainSelector)) {
+                    container.appendChild(chainSelector);
+                }
+            }
+        }
+        
+        // 設定初始顯示狀態
+        window.addEventListener('load', function() {
+            // 取得開關元素
+            const toggleSwitch = document.getElementById('modeToggle');
+            const sliderText = document.querySelector('.slider-text');
+            
+            // 設定初始文字為「說明文件」
+            sliderText.textContent = '說明文件';
+            
+            // 確保開關處於未勾選狀態（重要）
+            toggleSwitch.checked = false;
+            
+            // 調整布局
+            adjustLayout();
+            
+            // 發送初始模式訊息 - 應該是「聊天機器人」模式
+            window.parent.postMessage({
+                type: 'modeChange',
+                mode: 'chat'
+            }, '*');
+            
+            // 發送初始選擇的模型
+            window.parent.postMessage({
+                type: 'chatflowChange',
+                chatflowId: document.getElementById('chainSelector').value
+            }, '*');
+        });
+        
+        // 視窗大小改變時調整布局
+        window.addEventListener('resize', adjustLayout);
+        
+        // 下拉選單變更事件處理
+        document.getElementById('chainSelector').addEventListener('change', function() {
+            // 向父頁面發送變更訊息
+            window.parent.postMessage({
+                type: 'chatflowChange',
+                chatflowId: this.value
+            }, '*');
+        });
+        
+        // 模式切換開關事件處理
+        document.getElementById('modeToggle').addEventListener('change', function() {
+            // 根據勾選狀態更新文字和頁面
+            if (this.checked) {
+                // 勾選狀態（綠色）- 顯示 CHATBOT 文字，但實際顯示說明文件頁面
+                this.parentElement.querySelector('.slider-text').textContent = 'CHATBOT';
+                window.parent.postMessage({
+                    type: 'modeChange',
+                    mode: 'intro'
+                }, '*');
+            } else {
+                // 未勾選狀態（藍色）- 顯示說明文件文字，但實際顯示聊天機器人頁面
+                this.parentElement.querySelector('.slider-text').textContent = '說明文件';
+                window.parent.postMessage({
+                    type: 'modeChange',
+                    mode: 'chat'
+                }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
