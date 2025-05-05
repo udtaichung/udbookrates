@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            border-radius: 50%;
+        }
+        
+        .bubble {
+            background-color: #f7f8ff;
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            line-height: 1.6;
+            font-size: 22px;
+        }
+        
+        .intro-text {
+            font-size: 25px;  /* 開頭介紹文字 */
+        }
+        
+        .section-title {
+            font-size: 18px;  /* 段落標題 */
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .content-list {
+            font-size: 22px;  /* 列表內容 */
+            line-height: 1.8;
+        }
+        
+        .note-text {
+            font-size: 15px;  /* 注意事項文字 */
+            color: #666;
+        }
+        
+        .highlight {
+            color: red;
+            font-weight: bold;
+            font-size: 24px;  /* 強調文字 */
+        }
+        
+        /* 折疊功能相關樣式 */
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .collapsible:hover {
+            text-decoration: underline;
+        }
+        
+        .collapsible::after {
+            content: " ▼";
+            font-size: 16px;
+            color: red;
+        }
+        
+        .collapsible.active::after {
+            content: " ▲";
+        }
+        
+        .content {
+            display: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        /* 響應式圖片設定 */
+        .stone-image {
+            width: 60%; /* 默認桌面版寬度 */
+        }
+        
+        /* 手機版響應式設定 */
+        @media only screen and (max-width: 768px) {
+            .stone-image {
+                width: 80%; /* 手機版寬度 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="message">
+            <img src="texture/bot.png" alt="AI Assistant" class="avatar">
+            <div class="bubble">
+                <span class="highlight">﹝開放測試中！﹞Last updated：250326</span><br>
+                我是書格拉底，<br>
+                一個專注於知識檢索的AI助手。<br>
+                當你向我提問時，<br>
+                就像將石頭投入知識的池中，<br>
+                你提問的方式直接影響我能激起多深的漣漪。<br><br>
+                
+                精準、深入的問題，<br>
+                能讓我精確定位並檢索最相關的資訊，<br>
+                就像巧妙拋擲的石頭能激起優美的水花；<br>
+                反之，模糊的提問就像隨意丟出的碎石，<br>
+                只能激起零散的濺花。<br><br>
+                
+                我的回答品質，<br>
+                完全取決於你投出的那顆「問題之石」的準確度。<br><br>
+                <center>
+                <img src="texture/stone.jpg" alt="石頭" class="stone-image">
+                </center><br>
+                --回答僅作為參考，請自我查核--<br>
+                【基於Baseline RAG的LLM Q&A小幫手】<br>
+                <span class="highlight">資料庫內容</span><br>
+                § 主要 §<br>
+                建築法<br>
+                建築技術規則<br>
+                臺中市建管作業參考手冊<br>
+                臺中市建築管理自治條例<br>
+                建築法規小組會議記錄(102-113年)<br>
+                建造執照復核會議記錄(112-113年，施工中)<br>
+                國土管理署解釋函(updated：20250313)<br><br>
+                
+                § 擴充 §<br>
+                都市計畫法<br>
+                都市計畫容積移轉實施辦法<br>
+                都市危險及老舊建築物建築容積獎勵辦法<br>
+                都市計畫法臺中市施行自治條例<br>
+                都市計畫公共設施用地多目標使用辦法<br>
+                建築物使用類組及變更使用辦法<br>
+                建築物公共安全檢查簽證及申報辦法<br>
+                建築物室內裝修管理辦法<br>
+                招牌廣告及樹立廣告管理辦法<br>
+                建築物昇降設備設置及檢查管理辦法<span class="highlight">New update!</span><br>
+                建築物機械停車設備及檢查管理辦法<span class="highlight">New update!</span><br>
+                機械遊樂設施設置及檢查管理辦法<span class="highlight">New update!</span><br>
+                臺中市招牌廣告及樹立廣告設置辦法<br>
+                臺中市建築物設置太陽光電發電設備辦法<br>
+                臺中市水湳機場原址整體開發區都市設計審議規範<br>
+                臺中市招牌廣告及樹立廣告設置辦法<br>
+                臺中市建築物取得綠建築標章實施辦法<br>
+                臺中市建築物設置太陽光電發電設備辦法<br>
+                臺中市建築物機車自行車停車空間設置辦法<br>
+                臺中市政府都市設計審議委員會通案性會議決議<br>
+                臺中市特殊結構建築物委託審查辦法<br>
+                臺中市都市設計審議規範<br>
+                臺中市新市政中心專用區都市設計審議規範<br>
+                臺中市畸零地使用自治條例<br>
+                臺中市鼓勵宜居建築設施設置及回饋辦法<br>
+                臺中市實施都市計畫容積移轉審查許可條件及作業要點<br>
+                臺中市領有使用執照建築基地範圍內部分土地申請建築處理原則<br>
+                臺中市騎樓及無遮簷人行道設置標準<br>
+                地質敏感區基地地質調查及地質安全評估作業準則<br>
+                設置再生能源設施免請領雜項執照標準<br>
+                <div>
+                    <span class="highlight collapsible">台中市都市計畫\各地區細部計畫\土地使用分區管制要點(持續補充中)</span>
+                    <div class="content">
+                        舊有市區及一至五期<br>
+                        干城商業地區<br>
+                        配合臺中都會區鐵路高架捷運化計畫臺中車站地區<br>
+                        旱溪地區<br>
+                        樹德地區<br>
+                        後庄里地區<br>
+                        四張犂地區<br>
+                        配合臺中都會區大眾捷運系統烏日文心北屯線建設計畫捷運機廠<br>
+                        東光、三和地區<br>
+                        軍功及水景里地區<br>
+                        水湳機場原址整體開發區<br>
+                        西屯地區<br>
+                        福星路附近地區<br>
+                        新市政中心專用區<br>
+                        新市政中心專用區西側<br>
+                        新市政中心專用區南側<br>
+                        豐樂里附近地區<br>
+                        楓樹里附近地區<br>
+                        水堀頭地區<br>
+                        福安里附近<br>
+                        文山及春社里地區<br>
+                        整體開發地區單元一<br>
+                        整體開發地區單元二<br>
+                        整體開發地區單元三<br>
+                        整體開發地區單元四<br>
+                        整體開發地區單元五<br>
+                        整體開發單元六、七(大慶車站附近)<br>
+                        整體開發地區單元八<br>
+                        整體開發地區單元九、十、十一<br>
+                        整體開發地區單元十二<br>
+                        整體開發地區單元十三<br>
+                        整體開發地區單元十四<br>
+                        大里範圍<br>
+                        大里機四機關用地變住宅區<br>
+                        大里草湖範圍<br>
+                        軟體產業專用區範圍<br>
+                        擴大大里草湖範圍<br>
+                        太平及擴大範圍<br>
+                        太平中平範圍<br>
+                        太平新光範圍<br>
+                        樹德路東側範圍<br>
+                        霧峰地區<br>
+                        霧峰三七號道路南側及三十號道路東側住宅區<br>
+                        霧峰鄉農會附近範圍<br>
+                        省議會高爾夫球場西側、神農大帝廟南側、福新路<br>
+                        烏日地區<br>
+                        大肚地區<br>
+                        高鐵站區<br>
+                        台中港特定區<br>
+                        台中港特定區(市鎮中心)<br>
+                        台中港特定區(三塊厝地區)<br>
+                        后里都市計畫細部計畫<br>
+                        豐原地區(配合豐原三通)<br>
+                        豐原地區(豐交範圍)<br>
+                        大雅地區<br>
+                        潭子地區<br>
+                        神岡地區<br>
+                        東勢地區<br>
+                    </div>
+                </div><br>
+                § 特別 §<br>
+                容積移轉代金估計<br>
+                ------<br>
+                1.小幫手理解公式並支援計算，請詳細列舉所需參數，如果參數有缺，則無法運算。<br>
+                2.在詢問問題時，如有附加條件，請詳述。如「詢問地下室面積1200平方公尺需要幾隻梯？」就少了地下室用途，像停車空間、防空避難室、倉庫、辦公室，小幫手會無法辨別其用途，而計算有誤。<br>
+                3.如小幫手回答有偏差或有誤，可善用記憶功能，於下個問題加上「承上題，...」，小幫手會納入前題回答作思考。<br>
+                4.<span class="highlight">如有產生較大錯誤之處，煩請務必利用左下的回饋系統，留言給予指教！</span><br>
+                您的參與和留言，會讓系統更加完善！<br>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 添加折疊功能
+        document.addEventListener('DOMContentLoaded', function() {
+            var coll = document.getElementsByClassName("collapsible");
+            for (var i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
