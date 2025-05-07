@@ -67,7 +67,7 @@
         /* 為PDF按鈕添加樣式 */
         .pdf-button {
             position: absolute;
-            right: 210px; /* 向右移動 100px (從 110px 變成 210px) */
+            right: 20px; /* 位於紙飛機按鈕左側，往右移動 */
             bottom: 68px; /* 與輸入欄底部對齊，往上移動 */
             background-color: #f0f0f0;
             border: none;
@@ -90,6 +90,36 @@
             width: 20px;
             height: 20px;
             fill: #555;
+        }
+        
+        /* 下載格式選擇視窗樣式 */
+        .export-dialog {
+            display: none;
+            position: absolute;
+            right: 60px;
+            bottom: 65px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 12px;
+            z-index: 1001;
+        }
+        
+        .export-dialog button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border: none;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s;
+        }
+        
+        .export-dialog button:hover {
+            background-color: #e0e0e0;
         }
         
         /* 加載進度提示樣式 */
@@ -183,11 +213,17 @@
         <flowise-fullchatbot class="custom-chatbot"></flowise-fullchatbot>
         
         <!-- 下載按鈕 -->
-        <button class="pdf-button" id="savePdfButton" title="另存為PDF">
+        <button class="pdf-button" id="saveButton" title="另存聊天記錄">
             <svg class="pdf-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
         </button>
+        
+        <!-- 下載格式選擇視窗 -->
+        <div class="export-dialog" id="exportDialog">
+            <button id="saveTxtButton">儲存為 TXT</button>
+            <button id="savePdfButton">儲存為 PDF</button>
+        </div>
     </div>
     
     <div class="custom-footer">
@@ -327,6 +363,32 @@
             }
             
             return textContent;
+        }
+        
+        // 導出為 TXT 文件
+        function exportToTxt() {
+            try {
+                const textContent = getChatContent();
+                
+                // 創建下載連結
+                const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `建築技術規則AI聊天記錄_${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(link);
+                
+                // 點擊連結開始下載
+                link.click();
+                
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+                    console.log('TXT 檔案下載完成');
+                }, 100);
+            } catch (error) {
+                console.error('下載 TXT 聊天記錄時發生錯誤：', error);
+            }
         }
         
         // 將純文本轉換為格式化的 HTML
@@ -488,12 +550,35 @@
         
         // 綁定下載按鈕事件
         document.addEventListener('DOMContentLoaded', function() {
-            // PDF 下載按鈕
+            // 主下載按鈕
+            const saveButton = document.getElementById('saveButton');
+            const exportDialog = document.getElementById('exportDialog');
+            const saveTxtButton = document.getElementById('saveTxtButton');
             const savePdfButton = document.getElementById('savePdfButton');
+            
+            // 點擊下載按鈕顯示選項
+            saveButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                exportDialog.style.display = exportDialog.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            // 點擊文檔其他地方關閉對話框
+            document.addEventListener('click', function(e) {
+                if (e.target !== saveButton && e.target !== exportDialog && !exportDialog.contains(e.target)) {
+                    exportDialog.style.display = 'none';
+                }
+            });
+            
+            // 儲存為 TXT
+            saveTxtButton.addEventListener('click', function() {
+                exportToTxt();
+                exportDialog.style.display = 'none';
+            });
             
             // 儲存為 PDF
             savePdfButton.addEventListener('click', function() {
                 exportToPdf();
+                exportDialog.style.display = 'none';
             });
         });
     </script>
