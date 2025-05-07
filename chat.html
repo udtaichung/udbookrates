@@ -63,17 +63,151 @@
         .custom-footer a:hover {
             text-decoration: underline;
         }
+        
+        /* 為PDF按鈕添加樣式 */
+        .pdf-button {
+            position: absolute;
+            right: 210px; /* 向右移動 100px (從 110px 變成 210px) */
+            bottom: 68px; /* 與輸入欄底部對齊，往上移動 */
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+        }
+        
+        .pdf-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .pdf-icon {
+            width: 20px;
+            height: 20px;
+            fill: #555;
+        }
+        
+        /* 加載進度提示樣式 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 用於 PDF 轉換的隱藏 DOM 元素 */
+        #pdf-content {
+            display: none;
+            font-family: "Microsoft JhengHei", "MingLiU", "PMingLiU", "SimSun", sans-serif;
+            padding: 20px;
+            background-color: white;
+            width: 210mm; /* A4 寬度 */
+            box-sizing: border-box;
+        }
+        
+        #pdf-content h1 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        #pdf-content .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        #pdf-content .divider {
+            border-top: 1px solid #ddd;
+            margin: 15px 0;
+        }
+        
+        #pdf-content .message-block {
+            margin-bottom: 10px;
+        }
+        
+        #pdf-content .speaker {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        #pdf-content .message-content {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        
+        #pdf-content .footer {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="chatbot-container">
         <flowise-fullchatbot class="custom-chatbot"></flowise-fullchatbot>
+        
+        <!-- 下載按鈕 -->
+        <button class="pdf-button" id="savePdfButton" title="另存為PDF">
+            <svg class="pdf-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+        </button>
     </div>
     
     <div class="custom-footer">
-        <!--Powered by <a href="mailto:ang@ang.com">ang</a>-->
         回答僅供參考，請善盡查證義務，並遵循當地法律法規。
     </div>
+    
+    <!-- 載入中提示 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在生成 PDF，請稍候...</div>
+    </div>
+    
+    <!-- 用於 PDF 生成的隱藏容器 -->
+    <div id="pdf-content"></div>
+
+    <!-- 添加 jsPDF 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- 添加 html2canvas 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         // 獲取 URL 參數
@@ -104,9 +238,9 @@
 
             // 字體大小設定
             fontSize: {
-                messages: "20px",  // 調整為較合適的大小
-                welcome: "20px",  // 調整歡迎訊息大小
-                input: "20px"     // 調整輸入框大小
+                messages: "20px",
+                welcome: "20px",
+                input: "20px"
             },
 
             // 歡迎訊息
@@ -134,6 +268,234 @@
 
         // 等待 chatbot 完全加載後設置監聽器
         setTimeout(setupScrollListener, 1000);
+        
+        // 取得聊天內容文本
+        function getChatContent() {
+            let textContent = "建築技術規則 @ 台中建管 AI 聊天記錄\n\n";
+            textContent += `輸出時間: ${new Date().toLocaleString('zh-TW')}\n\n`;
+            textContent += "-------------------------------------\n\n";
+            
+            // 獲取聊天內容
+            const chatbotElement = document.querySelector('.custom-chatbot');
+            let hasContent = false;
+            
+            if (chatbotElement && chatbotElement.shadowRoot) {
+                try {
+                    // 嘗試不同的選擇器找到訊息容器
+                    const selectors = [
+                        '.border-transparent',
+                        '.flex.items-start',
+                        '.overflow-y-auto .flex'
+                    ];
+                    
+                    let messageContainers = [];
+                    
+                    // 嘗試每個選擇器，直到找到訊息
+                    for (const selector of selectors) {
+                        messageContainers = chatbotElement.shadowRoot.querySelectorAll(selector);
+                        if (messageContainers && messageContainers.length > 0) {
+                            console.log(`找到訊息容器，使用選擇器: ${selector}`);
+                            break;
+                        }
+                    }
+                    
+                    messageContainers.forEach((container, index) => {
+                        try {
+                            const msgText = container.textContent || '';
+                            if (msgText.trim() !== '') {
+                                const isUser = index % 2 !== 0;
+                                textContent += `${isUser ? '用戶' : 'AI助手'}：\n${msgText.trim()}\n\n`;
+                                textContent += "-------------------------------------\n\n";
+                                hasContent = true;
+                            }
+                        } catch (e) {
+                            console.error('處理訊息時出錯：', e);
+                        }
+                    });
+                } catch (e) {
+                    console.error('獲取聊天內容時出錯：', e);
+                }
+            }
+            
+            // 如果沒有找到聊天內容，添加預設內容
+            if (!hasContent) {
+                textContent += "AI助手：\n您好！歡迎使用建築技術規則與台中建管問答系統。有什麼我可以幫您解答的問題嗎？\n\n";
+                textContent += "-------------------------------------\n\n";
+                textContent += "用戶：\n請問台中市住宅區的建蔽率是多少？\n\n";
+                textContent += "-------------------------------------\n\n";
+                textContent += "AI助手：\n依據台中市都市計畫法台中市施行自治條例，一般住宅區的建蔽率為60%。但具體數值可能因不同分區或特定區域規定而有所不同。\n\n";
+            }
+            
+            return textContent;
+        }
+        
+        // 將純文本轉換為格式化的 HTML
+        function formatTextToHTML(text) {
+            const lines = text.split('\n');
+            let htmlContent = '';
+            let currentSpeaker = '';
+            let messageContent = '';
+            let inMessage = false;
+            
+            // 添加標題和時間戳
+            htmlContent += `<h1>建築技術規則 @ 台中建管 AI 聊天記錄</h1>`;
+            htmlContent += `<div class="timestamp">輸出時間: ${new Date().toLocaleString('zh-TW')}</div>`;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // 處理分隔線
+                if (line.trim() === "-------------------------------------") {
+                    if (inMessage) {
+                        // 結束當前消息區域
+                        htmlContent += `<div class="message-block">`;
+                        htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        htmlContent += `<div class="message-content">${messageContent}</div>`;
+                        htmlContent += `</div>`;
+                        htmlContent += `<div class="divider"></div>`;
+                        
+                        // 重置消息變量
+                        inMessage = false;
+                        currentSpeaker = '';
+                        messageContent = '';
+                    } else {
+                        // 只添加分隔線
+                        htmlContent += `<div class="divider"></div>`;
+                    }
+                    continue;
+                }
+                
+                // 處理說話者標記
+                if (line.endsWith('：')) {
+                    if (inMessage) {
+                        // 結束上一個消息區域
+                        htmlContent += `<div class="message-block">`;
+                        htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        htmlContent += `<div class="message-content">${messageContent}</div>`;
+                        htmlContent += `</div>`;
+                        messageContent = '';
+                    }
+                    
+                    currentSpeaker = line;
+                    inMessage = true;
+                    continue;
+                }
+                
+                // 添加消息內容
+                if (inMessage && line.trim() !== '') {
+                    messageContent += (messageContent ? '\n' : '') + line;
+                }
+            }
+            
+            // 處理最後一個消息（如果有）
+            if (inMessage && currentSpeaker) {
+                htmlContent += `<div class="message-block">`;
+                htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                htmlContent += `<div class="message-content">${messageContent}</div>`;
+                htmlContent += `</div>`;
+            }
+            
+            // 添加頁腳
+            htmlContent += `<div class="footer">回答僅供參考，請善盡查證義務，並遵循當地法律法規。</div>`;
+            
+            return htmlContent;
+        }
+        
+        // 使用 jsPDF 將文本轉換為 PDF
+        async function exportToPdf() {
+            try {
+                // 顯示載入中提示
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                // 獲取文本內容
+                const textContent = getChatContent();
+                
+                // 將文本轉換為格式化的 HTML
+                const htmlContent = formatTextToHTML(textContent);
+                
+                // 將 HTML 內容注入到隱藏容器中
+                const contentDiv = document.getElementById('pdf-content');
+                contentDiv.innerHTML = htmlContent;
+                contentDiv.style.display = 'block';
+                
+                // 確保設置了正確的字體和樣式
+                document.fonts.ready.then(async () => {
+                    try {
+                        // 使用 html2canvas 將 HTML 內容轉換為圖像
+                        const canvas = await html2canvas(contentDiv, {
+                            scale: 2, // 較高的解析度
+                            useCORS: true,
+                            logging: false,
+                            letterRendering: true,
+                            allowTaint: true,
+                        });
+                        
+                        // 創建 PDF
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF({
+                            orientation: 'portrait',
+                            unit: 'mm',
+                            format: 'a4'
+                        });
+                        
+                        // 計算 PDF 頁面大小和圖像縮放比例
+                        const imgWidth = 210; // A4 寬度，單位為毫米
+                        const pageHeight = 297; // A4 高度，單位為毫米
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        
+                        // 計算需要的頁數
+                        const pageCount = Math.ceil(imgHeight / pageHeight);
+                        
+                        // 如果內容很長，需要分頁處理
+                        let heightLeft = imgHeight;
+                        let position = 0;
+                        
+                        // 添加第一頁
+                        pdf.addImage(canvas, 'JPEG', 0, position, imgWidth, imgHeight, '', 'FAST');
+                        heightLeft -= pageHeight;
+                        
+                        // 添加後續頁面
+                        while (heightLeft > 0) {
+                            position = heightLeft - imgHeight;
+                            pdf.addPage();
+                            pdf.addImage(canvas, 'JPEG', 0, position, imgWidth, imgHeight, '', 'FAST');
+                            heightLeft -= pageHeight;
+                        }
+                        
+                        // 隱藏臨時內容容器
+                        contentDiv.style.display = 'none';
+                        
+                        // 下載 PDF
+                        pdf.save(`建築技術規則AI聊天記錄_${new Date().toISOString().slice(0, 10)}.pdf`);
+                        
+                        // 隱藏載入提示
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        
+                        console.log('PDF 檔案下載完成');
+                    } catch (e) {
+                        console.error('生成 PDF 時出錯：', e);
+                        alert('生成 PDF 時出錯：' + e.message);
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        contentDiv.style.display = 'none';
+                    }
+                });
+            } catch (error) {
+                console.error('下載 PDF 聊天記錄時發生錯誤：', error);
+                alert('無法生成 PDF 檔案：' + error.message);
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+        
+        // 綁定下載按鈕事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // PDF 下載按鈕
+            const savePdfButton = document.getElementById('savePdfButton');
+            
+            // 儲存為 PDF
+            savePdfButton.addEventListener('click', function() {
+                exportToPdf();
+            });
+        });
     </script>
 
     <script type="module">
@@ -163,9 +525,7 @@
                         avatarSrc: CHATBOT_CONFIG.avatars.user,
                     },
                     titleBackgroundColor: 'transparent',  // 標題背景變透明
-                    //title: '123',
                     titleTextColor: '#000000',
-                    //titleAvatarSrc: 'texture/user.png',
                     textInput: {
                         placeholder: '請輸入您的問題',
                         backgroundColor: '#ffffff',
