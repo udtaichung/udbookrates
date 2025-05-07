@@ -282,10 +282,33 @@
 
         setTimeout(setupScrollListener, 1000);
         
+        // 取得 LLM 名稱（跨 frame）
+        function getCurrentLLMName() {
+            try {
+                // 嘗試從 parent window 取得 header frame
+                const headerFrame = window.parent.document.getElementById('headerFrame');
+                if (headerFrame && headerFrame.contentWindow) {
+                    const chainSelector = headerFrame.contentWindow.document.getElementById('chainSelector');
+                    if (chainSelector) {
+                        const selectedOption = chainSelector.options[chainSelector.selectedIndex];
+                        return selectedOption ? selectedOption.text : '';
+                    }
+                }
+            } catch (e) {
+                // 跨域或其他錯誤
+                return '';
+            }
+            return '';
+        }
+
         function getChatContent() {
             let textContent = "建築技術規則 @ 台中建管 AI 聊天記錄\n\n";
-            textContent += `輸出時間: ${new Date().toLocaleString('zh-TW')}\n\n`;
-            textContent += "-------------------------------------\n\n";
+            textContent += `輸出時間: ${new Date().toLocaleString('zh-TW')}\n`;
+            const llmName = getCurrentLLMName();
+            if (llmName) {
+                textContent += `LLM模型：${llmName}\n`;
+            }
+            textContent += "\n-------------------------------------\n\n";
             
             const chatbotElement = document.querySelector('.custom-chatbot');
             let hasContent = false;
@@ -541,9 +564,26 @@
                                 font: "Microsoft JhengHei"
                             })
                         ],
-                        spacing: { after: 400 }
+                        spacing: { after: 100 }
                     })
                 );
+                // 新增 LLM 模型名稱
+                const llmName = getCurrentLLMName();
+                if (llmName) {
+                    children.push(
+                        new Paragraph({
+                            children: [
+                                new TextRun({
+                                    text: `LLM模型：${llmName}`,
+                                    size: 24,
+                                    color: "666666",
+                                    font: "Microsoft JhengHei"
+                                })
+                            ],
+                            spacing: { after: 400 }
+                        })
+                    );
+                }
 
                 let currentSpeaker = '';
                 let messageContent = [];
