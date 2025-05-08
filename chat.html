@@ -388,13 +388,16 @@
             htmlContent += `<h1>建築技術規則 @ 台中建管 AI 聊天記錄</h1>`;
             htmlContent += `<div class="timestamp">輸出時間: ${new Date().toLocaleString('zh-TW')}</div>`;
             
-            for (let i = 0; i < lines; i++) {
+            for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                
                 if (line.trim() === "-------------------------------------") {
                     if (inMessage) {
                         htmlContent += `<div class="message-block">`;
-                        htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        if (currentSpeaker === '用戶：') {
+                            htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
+                        } else {
+                            htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        }
                         htmlContent += `<div class="message-content">${messageContent}</div>`;
                         htmlContent += `</div>`;
                         htmlContent += `<div class="divider"></div>`;
@@ -406,29 +409,33 @@
                     }
                     continue;
                 }
-                
                 if (line.endsWith('：')) {
                     if (inMessage) {
                         htmlContent += `<div class="message-block">`;
-                        htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        if (currentSpeaker === '用戶：') {
+                            htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
+                        } else {
+                            htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                        }
                         htmlContent += `<div class="message-content">${messageContent}</div>`;
                         htmlContent += `</div>`;
                         messageContent = '';
                     }
-                    
                     currentSpeaker = line;
                     inMessage = true;
                     continue;
                 }
-                
                 if (inMessage && line.trim() !== '') {
                     messageContent += (messageContent ? '\n' : '') + line;
                 }
             }
-            
             if (inMessage && currentSpeaker) {
                 htmlContent += `<div class="message-block">`;
-                htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                if (currentSpeaker === '用戶：') {
+                    htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
+                } else {
+                    htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
+                }
                 htmlContent += `<div class="message-content">${messageContent}</div>`;
                 htmlContent += `</div>`;
             }
@@ -443,8 +450,8 @@
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 const textContent = getChatContent();
                 // 設定 PDF 與 Canvas 參數
-                const pdfWidth = 210; // mm
-                const pdfHeight = 297; // mm
+                const pdfWidth = 210; // mm (A4 寬)
+                const pdfHeight = 297; // mm (A4 高)
                 const dpi = 96; // 螢幕解析度
                 const mmToPx = mm => Math.floor(mm * dpi / 25.4);
                 const canvasWidth = mmToPx(pdfWidth);
@@ -452,24 +459,6 @@
                 const lineHeight = 32; // px
                 const fontSize = 20; // px
                 const fontFamily = 'Microsoft JhengHei, MingLiU, PMingLiU, SimSun, Arial, sans-serif';
-                // 將文字分行
-                function wrapText(ctx, text, maxWidth) {
-                    const words = text.split(/(\s+)/);
-                    let lines = [];
-                    let line = '';
-                    for (let n = 0; n < words.length; n++) {
-                        const testLine = line + words[n];
-                        const metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxWidth && n > 0) {
-                            lines.push(line);
-                            line = words[n];
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    lines.push(line);
-                    return lines;
-                }
                 // 建立 canvas
                 const canvas = document.createElement('canvas');
                 canvas.width = canvasWidth;
@@ -482,36 +471,74 @@
                 ctx.textBaseline = 'top';
                 const margin = 40;
                 const maxTextWidth = canvasWidth - margin * 2;
+                // 將文字分行
+                function wrapText(ctx, text, maxWidth) {
+                    let lines = [];
+                    let line = '';
+                    for (let i = 0; i < text.length; i++) {
+                        line += text[i];
+                        if (ctx.measureText(line).width > maxWidth) {
+                            if (line.length === 1) {
+                                lines.push(line);
+                                line = '';
+                            } else {
+                                lines.push(line.slice(0, -1));
+                                line = line.slice(-1);
+                            }
+                        }
+                    }
+                    if (line) lines.push(line);
+                    return lines;
+                }
                 // 分割內容
                 const lines = textContent.split('\n');
                 let renderedLines = [];
+                let isUserBlock = false;
                 for (let line of lines) {
+                    if (line.trim() === '用戶：') {
+                        renderedLines.push({text: line, isUser: true});
+                        isUserBlock = true;
+                        continue;
+                    } else if (line.trim().endsWith('：')) {
+                        renderedLines.push({text: line, isUser: false});
+                        isUserBlock = false;
+                        continue;
+                    }
                     if (line.trim() === '') {
-                        renderedLines.push('');
+                        renderedLines.push({text: '', isUser: isUserBlock});
                         continue;
                     }
                     const wrapped = wrapText(ctx, line, maxTextWidth);
-                    renderedLines.push(...wrapped);
+                    for (let w of wrapped) {
+                        renderedLines.push({text: w, isUser: isUserBlock});
+                    }
                 }
                 // 分頁
                 const linesPerPage = Math.floor((canvasHeight - margin * 2) / lineHeight);
                 const totalPages = Math.ceil(renderedLines.length / linesPerPage);
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({
-                    orientation: 'portrait',
+                    orientation: 'portrait', // 直式
                     unit: 'mm',
                     format: 'a4'
                 });
                 for (let page = 0; page < totalPages; page++) {
                     ctx.fillStyle = '#fff';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#222';
-                    ctx.font = `${fontSize}px ${fontFamily}`;
+                    ctx.textBaseline = 'top';
                     let y = margin;
                     for (let i = 0; i < linesPerPage; i++) {
                         const idx = page * linesPerPage + i;
                         if (idx >= renderedLines.length) break;
-                        ctx.fillText(renderedLines[idx], margin, y);
+                        const {text, isUser} = renderedLines[idx];
+                        if (isUser) {
+                            ctx.font = `bold ${fontSize}px ${fontFamily}`;
+                            ctx.fillStyle = '#022658';
+                        } else {
+                            ctx.font = `${fontSize}px ${fontFamily}`;
+                            ctx.fillStyle = '#222';
+                        }
+                        ctx.fillText(text, margin, y);
                         y += lineHeight;
                     }
                     const imgData = canvas.toDataURL('image/jpeg', 1.0);
@@ -588,6 +615,7 @@
                 let currentSpeaker = '';
                 let messageContent = [];
                 let inMessage = false;
+                let isUserBlock = false;
 
                 for (const line of lines) {
                     if (line.trim() === "-------------------------------------") {
@@ -599,7 +627,8 @@
                                             text: currentSpeaker,
                                             bold: true,
                                             size: 28,
-                                            font: "Microsoft JhengHei"
+                                            font: "Microsoft JhengHei",
+                                            color: currentSpeaker === '用戶：' ? '022658' : undefined
                                         })
                                     ]
                                 })
@@ -611,7 +640,9 @@
                                             new TextRun({
                                                 text: content,
                                                 size: 28,
-                                                font: "Microsoft JhengHei"
+                                                font: "Microsoft JhengHei",
+                                                color: isUserBlock ? '022658' : undefined,
+                                                bold: isUserBlock ? true : undefined
                                             })
                                         ]
                                     })
@@ -626,6 +657,7 @@
                             inMessage = false;
                             currentSpeaker = '';
                             messageContent = [];
+                            isUserBlock = false;
                         }
                         continue;
                     }
@@ -639,7 +671,8 @@
                                             text: currentSpeaker,
                                             bold: true,
                                             size: 28,
-                                            font: "Microsoft JhengHei"
+                                            font: "Microsoft JhengHei",
+                                            color: currentSpeaker === '用戶：' ? '022658' : undefined
                                         })
                                     ]
                                 })
@@ -651,7 +684,9 @@
                                             new TextRun({
                                                 text: content,
                                                 size: 28,
-                                                font: "Microsoft JhengHei"
+                                                font: "Microsoft JhengHei",
+                                                color: isUserBlock ? '022658' : undefined,
+                                                bold: isUserBlock ? true : undefined
                                             })
                                         ]
                                     })
@@ -661,6 +696,7 @@
                         }
                         currentSpeaker = line;
                         inMessage = true;
+                        isUserBlock = (line.trim() === '用戶：');
                         continue;
                     }
 
@@ -677,7 +713,8 @@
                                     text: currentSpeaker,
                                     bold: true,
                                     size: 28,
-                                    font: "Microsoft JhengHei"
+                                    font: "Microsoft JhengHei",
+                                    color: currentSpeaker === '用戶：' ? '022658' : undefined
                                 })
                             ]
                         })
@@ -689,7 +726,9 @@
                                     new TextRun({
                                         text: content,
                                         size: 28,
-                                        font: "Microsoft JhengHei"
+                                        font: "Microsoft JhengHei",
+                                        color: isUserBlock ? '022658' : undefined,
+                                        bold: isUserBlock ? true : undefined
                                     })
                                 ]
                             })
