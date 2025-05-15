@@ -774,6 +774,31 @@
             }
         }
         
+        // 監聽 header.html 傳來的 LLM 切換訊息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'chatflowChange') {
+                const newId = event.data.chatflowId;
+                // 重新設定 chatbot 的 chatflowId
+                const chatbot = document.querySelector('flowise-fullchatbot');
+                if (chatbot) {
+                    chatbot.setAttribute('chatflowid', newId);
+                    // 若元件支援 reload，可加上 reload
+                    if (typeof chatbot.reload === 'function') {
+                        chatbot.reload();
+                    } else {
+                        // 若無 reload 方法，則移除再新增
+                        const parent = chatbot.parentNode;
+                        const next = chatbot.nextSibling;
+                        chatbot.remove();
+                        const newBot = document.createElement('flowise-fullchatbot');
+                        newBot.className = 'custom-chatbot';
+                        newBot.setAttribute('chatflowid', newId);
+                        parent.insertBefore(newBot, next);
+                    }
+                }
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const saveButton = document.getElementById('saveButton');
             const exportDialog = document.getElementById('exportDialog');
