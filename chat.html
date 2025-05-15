@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <!--特徵碼：0005-->
+    <!--特徵碼：0007-->
 <head>
     <meta charset="UTF-8">
     <title>Chat Bot</title>
@@ -414,72 +414,6 @@
             } catch (error) {
                 console.error('下載 TXT 聊天記錄時發生錯誤：', error);
             }
-        }
-        
-        function formatTextToHTML(text) {
-            const lines = text.split('\n');
-            let htmlContent = '';
-            let currentSpeaker = '';
-            let messageContent = '';
-            let inMessage = false;
-            
-            htmlContent += `<h1>建築技術規則 @ 台中建管 AI 聊天記錄</h1>`;
-            htmlContent += `<div class="timestamp">輸出時間: ${new Date().toLocaleString('zh-TW')}</div>`;
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.trim() === "-------------------------------------") {
-                    if (inMessage) {
-                        htmlContent += `<div class="message-block">`;
-                        if (currentSpeaker === '用戶：') {
-                            htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
-                        } else {
-                            htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
-                        }
-                        htmlContent += `<div class="message-content">${messageContent}</div>`;
-                        htmlContent += `</div>`;
-                        htmlContent += `<div class="divider"></div>`;
-                        inMessage = false;
-                        currentSpeaker = '';
-                        messageContent = '';
-                    } else {
-                        htmlContent += `<div class="divider"></div>`;
-                    }
-                    continue;
-                }
-                if (line.endsWith('：')) {
-                    if (inMessage) {
-                        htmlContent += `<div class="message-block">`;
-                        if (currentSpeaker === '用戶：') {
-                            htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
-                        } else {
-                            htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
-                        }
-                        htmlContent += `<div class="message-content">${messageContent}</div>`;
-                        htmlContent += `</div>`;
-                        messageContent = '';
-                    }
-                    currentSpeaker = line;
-                    inMessage = true;
-                    continue;
-                }
-                if (inMessage && line.trim() !== '') {
-                    messageContent += (messageContent ? '\n' : '') + line;
-                }
-            }
-            if (inMessage && currentSpeaker) {
-                htmlContent += `<div class="message-block">`;
-                if (currentSpeaker === '用戶：') {
-                    htmlContent += `<div class="speaker" style="font-weight:bold;color:#022658;">${currentSpeaker}</div>`;
-                } else {
-                    htmlContent += `<div class="speaker">${currentSpeaker}</div>`;
-                }
-                htmlContent += `<div class="message-content">${messageContent}</div>`;
-            }
-            
-            htmlContent += `<div class="footer">回答僅供參考，請善盡查證義務，並遵循當地法律法規。</div>`;
-            
-            return htmlContent;
         }
         
         async function exportToPdf() {
