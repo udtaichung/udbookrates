@@ -215,9 +215,10 @@
         </button>
         
         <div class="export-dialog" id="exportDialog">
-            <button id="saveTxtButton">儲存為 TXT</button>
-            <button id="savePdfButton">儲存為 PDF</button>
-            <button id="saveWordButton">儲存為 Word</button>
+            <button id="saveTxtButton">儲存為 TXT 📝</button>
+            <button id="saveWordButton">儲存為 WORD 📝</button>
+            <button id="savePdfButton">儲存為 PDF 📸</button>
+            <button id="saveLongScreenshotButton">儲存長截圖 📸</button>
         </div>
     </div>
     
@@ -283,10 +284,31 @@
 
         setTimeout(setupScrollListener, 1000);
         
+        // 監聽 header.html 傳來的 LLM 切換訊息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'chatflowChange') {
+                const newId = event.data.chatflowId;
+                const chatbot = document.querySelector('flowise-fullchatbot');
+                if (chatbot) {
+                    chatbot.setAttribute('chatflowid', newId);
+                    if (typeof chatbot.reload === 'function') {
+                        chatbot.reload();
+                    } else {
+                        const parent = chatbot.parentNode;
+                        const next = chatbot.nextSibling;
+                        chatbot.remove();
+                        const newBot = document.createElement('flowise-fullchatbot');
+                        newBot.className = 'custom-chatbot';
+                        newBot.setAttribute('chatflowid', newId);
+                        parent.insertBefore(newBot, next);
+                    }
+                }
+            }
+        });
+        
         // 取得 LLM 名稱（跨 frame）
         function getCurrentLLMName() {
             try {
-                // 嘗試從 parent window 取得 header frame
                 const headerFrame = window.parent.document.getElementById('headerFrame');
                 if (headerFrame && headerFrame.contentWindow) {
                     const chainSelector = headerFrame.contentWindow.document.getElementById('chainSelector');
@@ -296,7 +318,6 @@
                     }
                 }
             } catch (e) {
-                // 跨域或其他錯誤
                 return '';
             }
             return '';
@@ -304,10 +325,10 @@
 
         function getChatContent() {
             let textContent = "建築技術規則 @ 台中建管 AI 聊天記錄\n\n";
-            textContent += `輸出時間: ${new Date().toLocaleString('zh-TW')}\n`;
+            textContent += "輸出時間: " + new Date().toLocaleString('zh-TW') + "\n";
             const llmName = getCurrentLLMName();
             if (llmName) {
-                textContent += `LLM模型：${llmName}\n`;
+                textContent += "LLM模型：" + llmName + "\n";
             }
             textContent += "\n-------------------------------------\n\n";
             
@@ -326,7 +347,7 @@
                     for (const selector of selectors) {
                         messageContainers = chatbotElement.shadowRoot.querySelectorAll(selector);
                         if (messageContainers && messageContainers.length > 0) {
-                            console.log(`找到訊息容器，使用選擇器: ${selector}`);
+                            console.log('找到訊息容器，使用選擇器: ' + selector);
                             break;
                         }
                     }
@@ -336,7 +357,7 @@
                             const msgText = container.textContent || '';
                             if (msgText.trim() !== '') {
                                 const isUser = index % 2 !== 0;
-                                textContent += `${isUser ? '用戶' : 'AI助手'}：\n${msgText.trim()}\n\n`;
+                                textContent += (isUser ? '用戶' : 'AI助手') + '：\n' + msgText.trim() + '\n\n';
                                 textContent += "-------------------------------------\n\n";
                                 hasContent = true;
                             }
@@ -360,53 +381,16 @@
             return textContent;
         }
         
-        function wrapText(ctx, text, maxWidth) {
-            let lines = [];
-            let line = '';
-            for (let i = 0; i < text.length; i++) {
-                line += text[i];
-                // 若超過寬度，強制斷行
-                if (ctx.measureText(line).width > maxWidth) {
-                    if (line.length === 1) {
-                        lines.push(line);
-                        line = '';
-                    } else {
-                        // 進一步細分，確保每一行都不超過 maxWidth
-                        let safeLine = line.slice(0, -1);
-                        let lastChar = line.slice(-1);
-                        // 若 safeLine 仍超過 maxWidth，則遞迴切割
-                        while (ctx.measureText(safeLine).width > maxWidth && safeLine.length > 1) {
-                            lines.push(safeLine.slice(0, 1));
-                            safeLine = safeLine.slice(1);
-                        }
-                        if (safeLine) lines.push(safeLine);
-                        line = lastChar;
-                    }
-                }
-            }
-            if (line) lines.push(line);
-            // 最後再次檢查每一行
-            let finalLines = [];
-            for (let l of lines) {
-                while (ctx.measureText(l).width > maxWidth && l.length > 1) {
-                    finalLines.push(l.slice(0, 1));
-                    l = l.slice(1);
-                }
-                if (l) finalLines.push(l);
-            }
-            return finalLines;
-        }
-        
         function exportToTxt() {
             try {
                 const textContent = getChatContent();
                 const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `建築技術規則AI聊天記錄_${new Date().toISOString().slice(0, 10)}.txt`;
+                link.download = '建築技術規則AI聊天記錄_' + new Date().toISOString().slice(0, 10) + '.txt';
                 document.body.appendChild(link);
                 link.click();
-                setTimeout(() => {
+                setTimeout(function() {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(link.href);
                     console.log('TXT 檔案下載完成');
@@ -420,44 +404,40 @@
             try {
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 const textContent = getChatContent();
-                // 設定 PDF 與 Canvas 參數
-                const pdfWidth = 210; // mm (A4 寬)
-                const pdfHeight = 297; // mm (A4 高)
-                const dpi = 96; // 螢幕解析度
-                const mmToPx = mm => Math.floor(mm * dpi / 25.4);
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+                const dpi = 96;
+                const mmToPx = function(mm) { return Math.floor(mm * dpi / 25.4); };
                 const canvasWidth = mmToPx(pdfWidth);
                 const canvasHeight = mmToPx(pdfHeight);
-                const lineHeight = 32; // px
-                const fontSize = 20; // px
+                const lineHeight = 32;
+                const fontSize = 20;
                 const fontFamily = 'Microsoft JhengHei, MingLiU, PMingLiU, SimSun, Arial, sans-serif';
-                // 建立 canvas
+                
                 const canvas = document.createElement('canvas');
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.font = `${fontSize}px ${fontFamily}`;
+                ctx.font = fontSize + 'px ' + fontFamily;
                 ctx.fillStyle = '#222';
                 ctx.textBaseline = 'top';
                 const margin = 40;
                 const maxTextWidth = canvasWidth - margin * 2;
-                // 將文字分行
+                
                 function wrapText(ctx, text, maxWidth) {
                     let lines = [];
                     let line = '';
                     for (let i = 0; i < text.length; i++) {
                         line += text[i];
-                        // 若超過寬度，強制斷行
                         if (ctx.measureText(line).width > maxWidth) {
                             if (line.length === 1) {
                                 lines.push(line);
                                 line = '';
                             } else {
-                                // 進一步細分，確保每一行都不超過 maxWidth
                                 let safeLine = line.slice(0, -1);
                                 let lastChar = line.slice(-1);
-                                // 若 safeLine 仍超過 maxWidth，則遞迴切割
                                 while (ctx.measureText(safeLine).width > maxWidth && safeLine.length > 1) {
                                     lines.push(safeLine.slice(0, 1));
                                     safeLine = safeLine.slice(1);
@@ -468,7 +448,6 @@
                         }
                     }
                     if (line) lines.push(line);
-                    // 最後再次檢查每一行
                     let finalLines = [];
                     for (let l of lines) {
                         while (ctx.measureText(l).width > maxWidth && l.length > 1) {
@@ -479,7 +458,7 @@
                     }
                     return finalLines;
                 }
-                // 分割內容
+                
                 const lines = textContent.split('\n');
                 let renderedLines = [];
                 let isUserBlock = false;
@@ -498,21 +477,21 @@
                         renderedLines.push({text: '', isUser: isUserBlock});
                         continue;
                     }
-                    // 將每一行內容用 wrapText 分割，並標記正確 isUserBlock
                     const wrapped = wrapText(ctx, line, maxTextWidth);
                     for (let w of wrapped) {
                         renderedLines.push({text: w, isUser: isUserBlock});
                     }
                 }
-                // 分頁
+                
                 const linesPerPage = Math.floor((canvasHeight - margin * 2) / lineHeight);
                 const totalPages = Math.ceil(renderedLines.length / linesPerPage);
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({
-                    orientation: 'portrait', // 直式
+                    orientation: 'portrait',
                     unit: 'mm',
                     format: 'a4'
                 });
+                
                 for (let page = 0; page < totalPages; page++) {
                     ctx.fillStyle = '#fff';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -521,22 +500,22 @@
                     for (let i = 0; i < linesPerPage; i++) {
                         const idx = page * linesPerPage + i;
                         if (idx >= renderedLines.length) break;
-                        const {text, isUser} = renderedLines[idx];
-                        if (isUser) {
-                            ctx.font = `bold ${fontSize}px ${fontFamily}`;
+                        const renderedLine = renderedLines[idx];
+                        if (renderedLine.isUser) {
+                            ctx.font = 'bold ' + fontSize + 'px ' + fontFamily;
                             ctx.fillStyle = '#022658';
                         } else {
-                            ctx.font = `${fontSize}px ${fontFamily}`;
+                            ctx.font = fontSize + 'px ' + fontFamily;
                             ctx.fillStyle = '#222';
                         }
-                        ctx.fillText(text, margin, y);
+                        ctx.fillText(renderedLine.text, margin, y);
                         y += lineHeight;
                     }
                     const imgData = canvas.toDataURL('image/jpeg', 1.0);
                     if (page > 0) pdf.addPage();
                     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                 }
-                pdf.save(`建築技術規則AI聊天記錄_${new Date().toISOString().slice(0, 10)}.pdf`);
+                pdf.save('建築技術規則AI聊天記錄_' + new Date().toISOString().slice(0, 10) + '.pdf');
                 document.getElementById('loadingOverlay').style.display = 'none';
                 console.log('PDF 檔案下載完成');
             } catch (error) {
@@ -549,58 +528,44 @@
         async function exportToWord() {
             try {
                 document.getElementById('loadingOverlay').style.display = 'flex';
-
                 if (!window.docx) {
                     throw new Error('docx library not loaded');
                 }
-
                 const textContent = getChatContent();
                 const lines = textContent.split('\n');
                 const { Document, Packer, Paragraph, TextRun } = window.docx;
-
-                // 準備 children 陣列
                 const children = [];
-                children.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text: "建築技術規則 @ 台中建管 AI 聊天記錄",
-                                bold: true,
-                                size: 36,
-                                font: "Microsoft JhengHei"
-                            })
-                        ]
-                    })
-                );
-                children.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text: `輸出時間: ${new Date().toLocaleString('zh-TW')}`,
-                                size: 24,
-                                color: "666666",
-                                font: "Microsoft JhengHei"
-                            })
-                        ],
-                        spacing: { after: 100 }
-                    })
-                );
-                // 新增 LLM 模型名稱
+                
+                children.push(new Paragraph({
+                    children: [new TextRun({
+                        text: "建築技術規則 @ 台中建管 AI 聊天記錄",
+                        bold: true,
+                        size: 36,
+                        font: "Microsoft JhengHei"
+                    })]
+                }));
+                
+                children.push(new Paragraph({
+                    children: [new TextRun({
+                        text: "輸出時間: " + new Date().toLocaleString('zh-TW'),
+                        size: 24,
+                        color: "666666",
+                        font: "Microsoft JhengHei"
+                    })],
+                    spacing: { after: 100 }
+                }));
+                
                 const llmName = getCurrentLLMName();
                 if (llmName) {
-                    children.push(
-                        new Paragraph({
-                            children: [
-                                new TextRun({
-                                    text: `LLM模型：${llmName}`,
-                                    size: 24,
-                                    color: "666666",
-                                    font: "Microsoft JhengHei"
-                                })
-                            ],
-                            spacing: { after: 400 }
-                        })
-                    );
+                    children.push(new Paragraph({
+                        children: [new TextRun({
+                            text: "LLM模型：" + llmName,
+                            size: 24,
+                            color: "666666",
+                            font: "Microsoft JhengHei"
+                        })],
+                        spacing: { after: 400 }
+                    }));
                 }
 
                 let currentSpeaker = '';
@@ -611,40 +576,30 @@
                 for (const line of lines) {
                     if (line.trim() === "-------------------------------------") {
                         if (inMessage) {
-                            children.push(
-                                new Paragraph({
-                                    children: [
-                                        new TextRun({
-                                            text: currentSpeaker,
-                                            bold: true,
-                                            size: 28,
-                                            font: "Microsoft JhengHei",
-                                            color: currentSpeaker === '用戶：' ? '022658' : undefined
-                                        })
-                                    ]
-                                })
-                            );
-                            messageContent.forEach(content => {
-                                children.push(
-                                    new Paragraph({
-                                        children: [
-                                            new TextRun({
-                                                text: content,
-                                                size: 28,
-                                                font: "Microsoft JhengHei",
-                                                color: isUserBlock ? '022658' : undefined,
-                                                bold: isUserBlock ? true : undefined
-                                            })
-                                        ]
-                                    })
-                                );
+                            children.push(new Paragraph({
+                                children: [new TextRun({
+                                    text: currentSpeaker,
+                                    bold: true,
+                                    size: 28,
+                                    font: "Microsoft JhengHei",
+                                    color: currentSpeaker === '用戶：' ? '022658' : undefined
+                                })]
+                            }));
+                            messageContent.forEach(function(content) {
+                                children.push(new Paragraph({
+                                    children: [new TextRun({
+                                        text: content,
+                                        size: 28,
+                                        font: "Microsoft JhengHei",
+                                        color: isUserBlock ? '022658' : undefined,
+                                        bold: isUserBlock ? true : undefined
+                                    })]
+                                }));
                             });
-                            children.push(
-                                new Paragraph({
-                                    thematicBreak: true,
-                                    spacing: { before: 200, after: 200 }
-                                })
-                            );
+                            children.push(new Paragraph({
+                                thematicBreak: true,
+                                spacing: { before: 200, after: 200 }
+                            }));
                             inMessage = false;
                             currentSpeaker = '';
                             messageContent = [];
@@ -655,33 +610,25 @@
 
                     if (line.endsWith('：')) {
                         if (inMessage) {
-                            children.push(
-                                new Paragraph({
-                                    children: [
-                                        new TextRun({
-                                            text: currentSpeaker,
-                                            bold: true,
-                                            size: 28,
-                                            font: "Microsoft JhengHei",
-                                            color: currentSpeaker === '用戶：' ? '022658' : undefined
-                                        })
-                                    ]
-                                })
-                            );
-                            messageContent.forEach(content => {
-                                children.push(
-                                    new Paragraph({
-                                        children: [
-                                            new TextRun({
-                                                text: content,
-                                                size: 28,
-                                                font: "Microsoft JhengHei",
-                                                color: isUserBlock ? '022658' : undefined,
-                                                bold: isUserBlock ? true : undefined
-                                            })
-                                        ]
-                                    })
-                                );
+                            children.push(new Paragraph({
+                                children: [new TextRun({
+                                    text: currentSpeaker,
+                                    bold: true,
+                                    size: 28,
+                                    font: "Microsoft JhengHei",
+                                    color: currentSpeaker === '用戶：' ? '022658' : undefined
+                                })]
+                            }));
+                            messageContent.forEach(function(content) {
+                                children.push(new Paragraph({
+                                    children: [new TextRun({
+                                        text: content,
+                                        size: 28,
+                                        font: "Microsoft JhengHei",
+                                        color: isUserBlock ? '022658' : undefined,
+                                        bold: isUserBlock ? true : undefined
+                                    })]
+                                }));
                             });
                             messageContent = [];
                         }
@@ -697,70 +644,57 @@
                 }
 
                 if (inMessage && currentSpeaker) {
-                    children.push(
-                        new Paragraph({
-                            children: [
-                                new TextRun({
-                                    text: currentSpeaker,
-                                    bold: true,
-                                    size: 28,
-                                    font: "Microsoft JhengHei",
-                                    color: currentSpeaker === '用戶：' ? '022658' : undefined
-                                })
-                            ]
-                        })
-                    );
-                    messageContent.forEach(content => {
-                        children.push(
-                            new Paragraph({
-                                children: [
-                                    new TextRun({
-                                        text: content,
-                                        size: 28,
-                                        font: "Microsoft JhengHei",
-                                        color: isUserBlock ? '022658' : undefined,
-                                        bold: isUserBlock ? true : undefined
-                                    })
-                                ]
-                            })
-                        );
+                    children.push(new Paragraph({
+                        children: [new TextRun({
+                            text: currentSpeaker,
+                            bold: true,
+                            size: 28,
+                            font: "Microsoft JhengHei",
+                            color: currentSpeaker === '用戶：' ? '022658' : undefined
+                        })]
+                    }));
+                    messageContent.forEach(function(content) {
+                        children.push(new Paragraph({
+                            children: [new TextRun({
+                                text: content,
+                                size: 28,
+                                font: "Microsoft JhengHei",
+                                color: isUserBlock ? '022658' : undefined,
+                                bold: isUserBlock ? true : undefined
+                            })]
+                        }));
                     });
                 }
 
-                children.push(
-                    new Paragraph({
-                        thematicBreak: true,
-                        spacing: { before: 200, after: 200 }
-                    }),
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text: "回答僅供參考，請善盡查證義務，並遵循當地法律法規。",
-                                size: 20,
-                                color: "777777",
-                                font: "Microsoft JhengHei"
-                            })
-                        ],
-                        alignment: "center",
-                        spacing: { before: 600 }
-                    })
-                );
+                children.push(new Paragraph({
+                    thematicBreak: true,
+                    spacing: { before: 200, after: 200 }
+                }));
+                
+                children.push(new Paragraph({
+                    children: [new TextRun({
+                        text: "回答僅供參考，請善盡查證義務，並遵循當地法律法規。",
+                        size: 20,
+                        color: "777777",
+                        font: "Microsoft JhengHei"
+                    })],
+                    alignment: "center",
+                    spacing: { before: 600 }
+                }));
 
                 const doc = new Document({
-                    sections: [
-                        {
-                            children: children
-                        }
-                    ]
+                    sections: [{
+                        children: children
+                    }]
                 });
 
                 const blob = await Packer.toBlob(doc);
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `建築技術規則AI聊天記錄_${new Date().toISOString().slice(0, 10)}.docx`;
+                link.download = '建築技術規則AI聊天記錄_' + new Date().toISOString().slice(0, 10) + '.docx';
                 document.body.appendChild(link);
                 link.click();
-                setTimeout(() => {
+                setTimeout(function() {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(link.href);
                     console.log('Word 檔案下載完成');
@@ -774,37 +708,390 @@
             }
         }
         
-        // 監聽 header.html 傳來的 LLM 切換訊息
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'chatflowChange') {
-                const newId = event.data.chatflowId;
-                // 重新設定 chatbot 的 chatflowId
-                const chatbot = document.querySelector('flowise-fullchatbot');
-                if (chatbot) {
-                    chatbot.setAttribute('chatflowid', newId);
-                    // 若元件支援 reload，可加上 reload
-                    if (typeof chatbot.reload === 'function') {
-                        chatbot.reload();
-                    } else {
-                        // 若無 reload 方法，則移除再新增
-                        const parent = chatbot.parentNode;
-                        const next = chatbot.nextSibling;
-                        chatbot.remove();
-                        const newBot = document.createElement('flowise-fullchatbot');
-                        newBot.className = 'custom-chatbot';
-                        newBot.setAttribute('chatflowid', newId);
-                        parent.insertBefore(newBot, next);
+        // 長截圖主入口函數
+        async function exportLongScreenshot() {
+            try {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.querySelector('.loading-text').textContent = '正在生成長截圖，請稍候...';
+                
+                const chatbotElement = document.querySelector('.custom-chatbot');
+                if (!chatbotElement || !chatbotElement.shadowRoot) {
+                    throw new Error('找不到聊天內容');
+                }
+                
+                console.log('=== 開始長截圖生成 ===');
+                const chatContainer = findChatContainer(chatbotElement.shadowRoot);
+                if (!chatContainer) {
+                    throw new Error('無法找到聊天內容容器');
+                }
+                
+                console.log('✓ 找到聊天容器');
+                await captureFullScreenshot(chatContainer);
+                
+                document.getElementById('loadingOverlay').style.display = 'none';
+                console.log('=== 長截圖生成完成 ===');
+                
+            } catch (error) {
+                console.error('長截圖生成錯誤：', error);
+                alert('長截圖生成失敗：' + error.message);
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        // 單次截圖主體
+        async function captureFullScreenshot(chatContainer) {
+            console.log('=== 單次截圖版本 ===');
+            
+            const viewportHeight = chatContainer.clientHeight;
+            const totalHeight = chatContainer.scrollHeight;
+            const totalWidth = chatContainer.clientWidth;
+            
+            const originalStyles = {
+                height: chatContainer.style.height,
+                maxHeight: chatContainer.style.maxHeight,
+                overflow: chatContainer.style.overflow,
+                overflowY: chatContainer.style.overflowY,
+                overflowX: chatContainer.style.overflowX
+            };
+            
+            const allElements = chatContainer.querySelectorAll('*');
+            const originalChildStyles = [];
+            
+            try {
+                console.log('修改容器樣式...');
+                
+                chatContainer.style.height = 'auto';
+                chatContainer.style.maxHeight = 'none';
+                chatContainer.style.overflow = 'visible';
+                chatContainer.style.overflowY = 'visible';
+                chatContainer.style.overflowX = 'visible';
+                
+                allElements.forEach(function(element, index) {
+                    const computedStyle = window.getComputedStyle(element);
+                    
+                    originalChildStyles[index] = {
+                        element: element,
+                        overflow: element.style.overflow,
+                        overflowY: element.style.overflowY,
+                        height: element.style.height,
+                        maxHeight: element.style.maxHeight
+                    };
+                    
+                    if (computedStyle.overflow === 'hidden' || 
+                        computedStyle.overflowY === 'hidden' ||
+                        (element.className && element.className.toString().indexOf('message') !== -1) ||
+                        (element.className && element.className.toString().indexOf('chat') !== -1) ||
+                        (element.className && element.className.toString().indexOf('bubble') !== -1)) {
+                        
+                        element.style.overflow = 'visible';
+                        element.style.overflowY = 'visible';
+                        element.style.height = 'auto';
+                        element.style.maxHeight = 'none';
                     }
+                });
+                
+                await new Promise(function(resolve) { setTimeout(resolve, 1000); });
+                
+                const newHeight = chatContainer.scrollHeight;
+                const newWidth = chatContainer.scrollWidth;
+                
+                console.log('修改後尺寸:', { 
+                    scrollHeight: newHeight, 
+                    scrollWidth: newWidth 
+                });
+                
+                const canvas = await html2canvas(chatContainer, {
+                    allowTaint: true,
+                    useCORS: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: Math.max(newWidth, totalWidth),
+                    windowHeight: Math.max(newHeight, totalHeight),
+                    width: Math.max(newWidth, totalWidth),
+                    height: Math.max(newHeight, totalHeight),
+                    backgroundColor: '#202020',
+                    scale: 2,
+                    logging: false,
+                    removeContainer: false,
+                    foreignObjectRendering: true,
+                    imageTimeout: 15000,
+                    ignoreElements: function(element) {
+                        // 忽略載入失敗的圖片
+                        if (element.tagName === 'IMG') {
+                            return !element.complete || element.naturalWidth === 0;
+                        }
+                        return false;
+                    },
+                    onclone: function(clonedDoc, element) {
+                        console.log('🔧 開始處理 onclone...');
+                        
+                        element.style.height = 'auto';
+                        element.style.maxHeight = 'none';
+                        element.style.overflow = 'visible';
+                        element.style.overflowY = 'visible';
+                        element.style.overflowX = 'visible';
+                        
+                        const clonedElements = clonedDoc.querySelectorAll('*');
+                        clonedElements.forEach(function(el) {
+                            if (el.style.overflow === 'hidden' || el.style.overflowY === 'hidden') {
+                                el.style.overflow = 'visible';
+                                el.style.overflowY = 'visible';
+                            }
+                            if (el.style.height && el.style.height !== 'auto') {
+                                el.style.height = 'auto';
+                            }
+                            if (el.style.maxHeight && el.style.maxHeight !== 'none') {
+                                el.style.maxHeight = 'none';
+                            }
+                        });
+                        
+                        // 🔧 處理圖片問題 - 改良版
+                        const images = clonedDoc.querySelectorAll('img');
+                        console.log('找到圖片數量:', images.length);
+                        
+                        images.forEach(function(img, imgIndex) {
+                            console.log('處理圖片', imgIndex, ':', img.src);
+                            
+                            // 檢查圖片是否載入失敗或是頭像圖片
+                            const isAvatarImage = img.src && (
+                                img.src.includes('bot.png') || 
+                                img.src.includes('user.png') ||
+                                img.src.includes('avatar') ||
+                                img.src.includes('profile')
+                            );
+                            
+                            const isBrokenImage = !img.complete || 
+                                                img.naturalWidth === 0 || 
+                                                img.naturalHeight === 0;
+                            
+                            if (isAvatarImage || isBrokenImage) {
+                                console.log('需要替換的圖片:', {
+                                    src: img.src,
+                                    isAvatar: isAvatarImage,
+                                    isBroken: isBrokenImage,
+                                    complete: img.complete,
+                                    naturalWidth: img.naturalWidth
+                                });
+                                
+                                // 創建替代標籤
+                                const replacement = clonedDoc.createElement('span');
+                                
+                                if (isAvatarImage) {
+                                    // 判斷是機器人還是用戶頭像
+                                    const isBot = img.src.includes('bot.png') || 
+                                                 img.classList.contains('bot') ||
+                                                 (img.parentElement && img.parentElement.classList.contains('bot'));
+                                    
+                                    replacement.style.cssText = 
+                                        'display: inline-block; ' +
+                                        'padding: 4px 8px; ' +
+                                        'margin: 2px; ' +
+                                        'background-color: ' + (isBot ? '#4caf50' : '#2196f3') + '; ' +
+                                        'color: #111111 !important; ' +
+                                        'border: 1px solid ' + (isBot ? '#808080' : '#808080') + '; ' +
+                                        'border-radius: 4px; ' +
+                                        'font-size: 24px; ' +  // 🎯 修改字體大小：12px → 14px
+                                        'font-weight: bold; ' +
+                                        'font-family: Microsoft JhengHei, Arial, sans-serif; ' +
+                                        'vertical-align: middle; ' +
+                                        'min-width: 40px; ' +
+                                        'text-align: center;';
+                                    
+                                    replacement.textContent = isBot ? 'AI' : '用戶';
+                                    console.log('替換為:', replacement.textContent);
+                                } else {
+                                    // 一般破損圖片
+                                    replacement.style.cssText = 
+                                        'display: inline-block; ' +
+                                        'padding: 2px 6px; ' +
+                                        'background-color: #f0f0f0; ' +
+                                        'border: 1px solid #ddd; ' +
+                                        'border-radius: 3px; ' +
+                                        'font-size: 12px; ' +  // 🎯 一般圖片標籤字體大小
+                                        'color: #666; ' +      // 🎯 一般圖片標籤顏色
+                                        'font-family: Microsoft JhengHei, Arial, sans-serif;';
+                                    
+                                    replacement.textContent = '[圖片]';
+                                }
+                                
+                                // 替換圖片
+                                if (img.parentNode) {
+                                    try {
+                                        img.parentNode.replaceChild(replacement, img);
+                                        console.log('✓ 圖片替換成功');
+                                    } catch (e) {
+                                        console.error('圖片替換失敗:', e);
+                                        // 如果替換失敗，嘗試隱藏原圖片
+                                        img.style.display = 'none';
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // 處理 SVG 圖示
+                        const svgs = clonedDoc.querySelectorAll('svg');
+                        svgs.forEach(function(svg) {
+                            if (!svg.getAttribute('width') && !svg.style.width) {
+                                svg.style.width = '20px';
+                                svg.style.height = '20px';
+                            }
+                        });
+                        
+                        console.log('🔧 onclone 處理完成');
+                    }
+                });
+                
+                console.log('截圖成功！尺寸: ' + canvas.width + 'x' + canvas.height);
+                
+                const finalCanvas = addHeaderToCanvas(canvas);
+                await downloadCanvas(finalCanvas, '長截圖');
+                
+                console.log('✅ 截圖完成');
+                
+            } catch (error) {
+                console.error('截圖失敗:', error);
+                throw error;
+                
+            } finally {
+                console.log('恢復樣式...');
+                
+                Object.keys(originalStyles).forEach(function(key) {
+                    if (originalStyles[key]) {
+                        chatContainer.style[key] = originalStyles[key];
+                    } else {
+                        chatContainer.style.removeProperty(key.replace(/([A-Z])/g, '-$1').toLowerCase());
+                    }
+                });
+                
+                originalChildStyles.forEach(function(styleInfo, index) {
+                    if (styleInfo && styleInfo.element) {
+                        const el = styleInfo.element;
+                        el.style.overflow = styleInfo.overflow || '';
+                        el.style.overflowY = styleInfo.overflowY || '';
+                        el.style.height = styleInfo.height || '';
+                        el.style.maxHeight = styleInfo.maxHeight || '';
+                    }
+                });
+                
+                console.log('樣式恢復完成');
+            }
+        }
+
+        // 在 Shadow DOM 中尋找聊天容器
+        function findChatContainer(shadowRoot) {
+            const containerSelectors = [
+                '.overflow-y-auto',
+                '[role="log"]',
+                '.chat-messages',
+                '.messages-container',
+                '.relative.h-full',
+                'div[style*="overflow-y"]',
+                'div[style*="overflow: auto"]',
+                'div[class*="scroll"]',
+                'div[class*="chat"]',
+                'div[class*="message"]'
+            ];
+            
+            for (const selector of containerSelectors) {
+                const container = shadowRoot.querySelector(selector);
+                if (container) {
+                    console.log('使用選擇器找到容器:', selector);
+                    return container;
                 }
             }
-        });
+            
+            const allDivs = shadowRoot.querySelectorAll('div');
+            for (const div of allDivs) {
+                const style = window.getComputedStyle(div);
+                if (style.overflowY === 'auto' || style.overflowY === 'scroll' || 
+                    div.scrollHeight > div.clientHeight) {
+                    console.log('找到可滾動容器');
+                    return div;
+                }
+            }
+            
+            for (const div of allDivs) {
+                if (div.children.length > 0 && div.textContent.trim().length > 100) {
+                    console.log('使用有內容的 div 作為容器');
+                    return div;
+                }
+            }
+            
+            return null;
+        }
 
+        // 添加頁首信息到畫布
+        function addHeaderToCanvas(originalCanvas) {
+            const headerHeight = 120;
+            const padding = 20;
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = originalCanvas.width;
+            finalCanvas.height = originalCanvas.height + headerHeight;
+            
+            const ctx = finalCanvas.getContext('2d');
+            
+            ctx.fillStyle = '#202020';
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            ctx.font = 'bold 28px Microsoft JhengHei, Arial, sans-serif';
+            ctx.fillText('建築技術規則 @ 台中建管 AI 聊天記錄', padding, padding);
+            
+            ctx.font = '20px Microsoft JhengHei, Arial, sans-serif';
+            ctx.fillStyle = '#666666';
+            const timestamp = new Date().toLocaleString('zh-TW');
+            ctx.fillText('輸出時間: ' + timestamp, padding, padding + 40);
+            
+            const llmName = getCurrentLLMName();
+            if (llmName) {
+                ctx.fillText('LLM模型: ' + llmName, padding, padding + 70);
+            }
+            
+            ctx.strokeStyle = '#dddddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, headerHeight - 10);
+            ctx.lineTo(finalCanvas.width - padding, headerHeight - 10);
+            ctx.stroke();
+            
+            ctx.drawImage(originalCanvas, 0, headerHeight);
+            
+            return finalCanvas;
+        }
+
+        // 下載畫布為圖片
+        async function downloadCanvas(canvas, suffix) {
+            return new Promise(function(resolve) {
+                canvas.toBlob(function(blob) {
+                    const link = document.createElement('a');
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    link.download = '建築技術規則AI聊天' + (suffix || '') + '_' + timestamp + '.png';
+                    link.href = URL.createObjectURL(blob);
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    setTimeout(function() {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                        console.log((suffix || '') + '下載完成');
+                        resolve();
+                    }, 100);
+                }, 'image/png', 1.0);
+            });
+        }
+
+        // DOMContentLoaded 事件監聽器
         document.addEventListener('DOMContentLoaded', function() {
             const saveButton = document.getElementById('saveButton');
             const exportDialog = document.getElementById('exportDialog');
             const saveTxtButton = document.getElementById('saveTxtButton');
             const savePdfButton = document.getElementById('savePdfButton');
             const saveWordButton = document.getElementById('saveWordButton');
+            const saveLongScreenshotButton = document.getElementById('saveLongScreenshotButton');
             
             saveButton.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -829,6 +1116,11 @@
             
             saveWordButton.addEventListener('click', function() {
                 exportToWord();
+                exportDialog.style.display = 'none';
+            });
+            
+            saveLongScreenshotButton.addEventListener('click', function() {
+                exportLongScreenshot();
                 exportDialog.style.display = 'none';
             });
         });
@@ -872,7 +1164,7 @@
                     text: ''
                 }
             },
-            customCSS: ``
+            customCSS: ''
         })
     </script>
 </body>
