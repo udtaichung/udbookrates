@@ -1023,7 +1023,7 @@
 
         // 添加頁首信息到畫布
         function addHeaderToCanvas(originalCanvas) {
-            const headerHeight = 120;
+            const headerHeight = 200;
             const padding = 20;
             const finalCanvas = document.createElement('canvas');
             finalCanvas.width = originalCanvas.width;
@@ -1038,23 +1038,28 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
             
+            // 第一行標題
+            ctx.font = 'bold 36px Microsoft JhengHei, Arial, sans-serif';
+            ctx.fillText('建築技術規則 @ 台中建管 AI 聊天記錄', padding, padding);
+    
+            // 第二行標題（副標題）
             ctx.font = 'bold 28px Microsoft JhengHei, Arial, sans-serif';
-            ctx.fillText('建築技術規則 @ 台中建管 AI 聊天記錄 (回答僅供參考，請善盡查證義務，並遵循當地法律法規。)', padding, padding);
-            
-            ctx.font = '20px Microsoft JhengHei, Arial, sans-serif';
-            ctx.fillStyle = '#666666';
+            ctx.fillText('(回答僅供參考，請善盡查證義務，並遵循當地法律法規。)', padding, padding + 45);
+    
+            ctx.font = '28px Microsoft JhengHei, Arial, sans-serif';
+            ctx.fillStyle = '#888888';
             const timestamp = new Date().toLocaleString('zh-TW');
-            ctx.fillText('輸出時間: ' + timestamp, padding, padding + 40);
+            ctx.fillText('輸出時間: ' + timestamp, padding, padding + 85);
             
             const llmName = getCurrentLLMName();
             if (llmName) {
-                ctx.fillText('LLM模型: ' + llmName, padding, padding + 70);
+                ctx.fillText('LLM模型: ' + llmName, padding, padding + 120);
             }
             
             ctx.strokeStyle = '#dddddd';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(padding, headerHeight - 10);
+            ctx.moveTo(padding, headerHeight - 0);
             ctx.lineTo(finalCanvas.width - padding, headerHeight - 10);
             ctx.stroke();
             
