@@ -14,6 +14,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
         }
         
         .message {
@@ -97,16 +98,102 @@
             width: 60%; /* 默認桌面版寬度 */
         }
         
+        /* 重置教學按鈕樣式 */
+        .reset-tutorial-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(145deg, #00ff88, #00e676);
+            color: #1a365d;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+            transition: all 0.3s ease;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .reset-tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 255, 136, 0.4);
+            background: linear-gradient(145deg, #00e676, #00c853);
+        }
+        
+        .reset-tutorial-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+        }
+        
+        .reset-tutorial-btn .icon {
+            font-size: 18px;
+            animation: rotate 2s linear infinite paused;
+        }
+        
+        .reset-tutorial-btn:hover .icon {
+            animation-play-state: running;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
         /* 手機版響應式設定 */
         @media only screen and (max-width: 768px) {
             .stone-image {
                 width: 80%; /* 手機版寬度 */
             }
+            
+            .reset-tutorial-btn {
+                top: 10px;
+                right: 10px;
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            
+            .reset-tutorial-btn .icon {
+                font-size: 16px;
+            }
+        }
+        
+        /* 成功提示樣式 */
+        .success-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #00ff88, #00e676);
+            color: #1a365d;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+        
+        .success-message.show {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
+        <!-- 重置教學按鈕 -->
+        <button class="reset-tutorial-btn" onclick="resetTutorial()" title="清除教學記錄並重新載入頁面">
+            <span class="icon">🔰</span>
+            重置教學
+        </button>
+        
         <div class="message">
             <img src="texture/bot.png" alt="AI Assistant" class="avatar">
             <div class="bubble">
@@ -263,6 +350,24 @@
                 });
             }
         });
+        
+        // 重置教學功能
+        function resetTutorial() {
+            try {
+                // 清除 LocalStorage 中的教學記錄
+                localStorage.removeItem('tutorial-dont-show');
+                
+                console.log('教學記錄已重置');
+                
+                // 刷新整個頁面回到首頁
+                window.top.location.reload();
+                
+            } catch (error) {
+                console.error('重置教學時發生錯誤:', error);
+                // 如果清除失敗，仍然嘗試刷新頁面
+                window.top.location.reload();
+            }
+        }
     </script>
 </body>
 </html>
