@@ -33,6 +33,237 @@
             position: relative;
             z-index: 1;
         }
+
+        /* ===== 教學引導系統樣式 ===== */
+        
+        /* 教學遮罩層 */
+        .tutorial-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+
+        /* 明亮高亮框 - 這是重點！ */
+        .tutorial-spotlight {
+            position: absolute;
+            border: 4px solid #00ff88;
+            border-radius: 12px;
+            box-shadow: 
+                0 0 0 4px rgba(0, 255, 136, 0.3),
+                0 0 30px rgba(0, 255, 136, 0.8),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+            background-color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            animation: spotlightPulse 2s infinite;
+        }
+
+        @keyframes spotlightPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 0 4px rgba(0, 255, 136, 0.3),
+                    0 0 30px rgba(0, 255, 136, 0.8),
+                    inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 0 6px rgba(0, 255, 136, 0.5),
+                    0 0 50px rgba(0, 255, 136, 1),
+                    inset 0 0 0 3px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* 教學提示框 */
+        .tutorial-tooltip {
+            position: absolute;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 3px solid #00ff88;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 350px;
+            min-width: 280px;
+            box-shadow: 
+                0 12px 35px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(0, 255, 136, 0.3);
+            z-index: 10001;
+        }
+
+        .tutorial-tooltip h3 {
+            margin: 0 0 12px 0;
+            color: #1a365d;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .tutorial-tooltip .step-icon {
+            background: #00ff88;
+            color: #1a365d;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .tutorial-tooltip p {
+            margin: 0 0 18px 0;
+            color: #2d3748;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* 教學控制按鈕 */
+        .tutorial-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .tutorial-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+
+        .tutorial-btn-primary {
+            background: linear-gradient(145deg, #00ff88, #00e676);
+            color: #1a365d;
+        }
+
+        .tutorial-btn-secondary {
+            background: linear-gradient(145deg, #e2e8f0, #cbd5e0);
+            color: #4a5568;
+        }
+
+        .tutorial-btn-skip {
+            background: linear-gradient(145deg, #fed7d7, #feb2b2);
+            color: #742a2a;
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 進度指示器 */
+        .tutorial-progress {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            color: #1a365d;
+            font-weight: bold;
+            z-index: 10002;
+            border: 2px solid #00ff88;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 不再顯示選項 */
+        .tutorial-checkbox {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .tutorial-checkbox input {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        /* 歡迎動畫 */
+        .tutorial-welcome {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 4px solid #00ff88;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 255, 136, 0.4);
+            z-index: 10001;
+            max-width: 500px;
+        }
+
+        .tutorial-welcome h2 {
+            color: #1a365d;
+            font-size: 28px;
+            margin-bottom: 20px;
+            animation: welcomeGlow 2s infinite alternate;
+        }
+
+        @keyframes welcomeGlow {
+            0% { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+        }
+
+        .tutorial-welcome p {
+            color: #2d3748;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        /* 響應式設計 */
+        @media only screen and (max-width: 768px) {
+            .tutorial-tooltip {
+                max-width: 280px;
+                min-width: 250px;
+                padding: 20px;
+            }
+            
+            .tutorial-welcome {
+                max-width: 90%;
+                padding: 30px 20px;
+            }
+            
+            .tutorial-welcome h2 {
+                font-size: 24px;
+            }
+            
+            .tutorial-progress {
+                top: 15px;
+                right: 15px;
+                font-size: 14px;
+                padding: 8px 15px;
+            }
+            
+            /* 手機版提示框位置調整 */
+            .tutorial-tooltip-mobile-adjust {
+                left: 20px !important;
+                right: 20px !important;
+                width: calc(100% - 40px) !important;
+                max-width: none !important;
+                min-width: none !important;
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -40,11 +271,411 @@
         <iframe id="headerFrame" src="header.html"></iframe>
         <iframe id="chatFrame" src="chat.html"></iframe>
     </div>
+
+    <!-- 教學引導系統 -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <!-- 明亮高亮框 -->
+        <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+        
+        <!-- 進度指示器 -->
+        <div class="tutorial-progress" id="tutorialProgress">
+            步驟 1 / 4
+        </div>
+        
+        <!-- 歡迎畫面 -->
+        <div class="tutorial-welcome" id="tutorialWelcome">
+            <h2>🏗️ 歡迎使用建築AI助手！</h2>
+            <p>讓我們花1分鐘時間，<br>快速了解系統的主要功能。</p>
+            <div class="tutorial-controls">
+                <button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">
+                    跳過教學
+                </button>
+                <button class="tutorial-btn tutorial-btn-primary" onclick="startTutorial()">
+                    開始導覽 →
+                </button>
+            </div>
+            <div class="tutorial-checkbox">
+                <input type="checkbox" id="dontShowAgain">
+                <label for="dontShowAgain">下次不再顯示此教學</label>
+            </div>
+        </div>
+        
+        <!-- 功能介紹提示框 -->
+        <div class="tutorial-tooltip" id="tutorialTooltip" style="display: none;">
+            <h3>
+                <span class="step-icon" id="stepIcon">1</span>
+                <span id="stepTitle">說明文件</span>
+            </h3>
+            <p id="stepDescription">
+                點擊此開關可以查看詳細的系統說明文件，了解資料庫內容和使用方式。
+            </p>
+            <div class="tutorial-controls">
+                <button class="tutorial-btn tutorial-btn-secondary" onclick="skipTutorial()">
+                    跳過
+                </button>
+                <div>
+                    <button class="tutorial-btn tutorial-btn-secondary" onclick="prevStep()" id="prevBtn" style="display: none;">
+                        ← 上一步
+                    </button>
+                    <button class="tutorial-btn tutorial-btn-primary" onclick="nextStep()" id="nextBtn">
+                        下一步 →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 當前模式，默認為聊天模式
         let currentMode = 'chat';
         // 當前選定的 chatflowId
         let currentChatflowId = 'c8dc18ab-627a-4a79-8192-1521875e65e5';
+        
+        // ===== 教學引導系統 =====
+        
+        let currentStep = 0;
+        let tutorialActive = false;
+        
+        // 教學步驟配置
+        const tutorialSteps = [
+            {
+                title: "說明文件",
+                description: "點擊此開關可以查看詳細的系統說明文件，了解資料庫內容和使用方式。",
+                target: "header", // 指向 header iframe
+                selector: ".toggle-switch", // header 內的選擇器
+                position: "bottom"
+            },
+            {
+                title: "LLM模型選擇",
+                description: "在這裡選擇不同的AI模型。直覺型適合一般問答，思考型適合複雜計算。",
+                target: "header",
+                selector: ".chain-selector",
+                position: "bottom"
+            },
+            {
+                title: "刷新聊天記錄",
+                description: "點擊此按鈕可以清空當前對話，開始新的對話。這是 Flowise 內建的功能。",
+                target: "header", // 使用 header 作為基準
+                selector: ".chain-selector", // 基於 LLM 選擇器
+                position: "relative", // 特殊標記：相對定位
+                offsetX: 50, // 右偏移50px
+                offsetY: 50  // 下偏移50px
+            },
+            {
+                title: "下載儲存",
+                description: "聊天結束後，可以將對話記錄儲存為TXT、Word、PDF或長截圖格式。",
+                target: "chat",
+                selector: ".pdf-button",
+                position: "left"
+            }
+        ];
+        
+        // 檢查是否需要顯示教學
+        function checkShowTutorial() {
+            const dontShow = localStorage.getItem('tutorial-dont-show');
+            
+            // 只有當用戶主動勾選「下次不用顯示」才不顯示
+            if (!dontShow) {
+                // 等待頁面完全載入後顯示教學
+                setTimeout(showTutorial, 1000);
+            }
+        }
+        
+        // 顯示教學
+        function showTutorial() {
+            tutorialActive = true;
+            document.getElementById('tutorialOverlay').style.display = 'block';
+            document.getElementById('tutorialWelcome').style.display = 'block';
+        }
+        
+        // 開始教學導覽
+        function startTutorial() {
+            document.getElementById('tutorialWelcome').style.display = 'none';
+            document.getElementById('tutorialTooltip').style.display = 'block';
+            currentStep = 0;
+            showStep(currentStep);
+        }
+        
+        // 顯示指定步驟
+        function showStep(stepIndex) {
+            if (stepIndex >= tutorialSteps.length) {
+                completeTutorial();
+                return;
+            }
+            
+            const step = tutorialSteps[stepIndex];
+            const spotlight = document.getElementById('tutorialSpotlight');
+            const tooltip = document.getElementById('tutorialTooltip');
+            const progress = document.getElementById('tutorialProgress');
+            
+            // 更新進度
+            progress.textContent = `步驟 ${stepIndex + 1} / ${tutorialSteps.length}`;
+            
+            // 更新提示框內容
+            document.getElementById('stepIcon').textContent = stepIndex + 1;
+            document.getElementById('stepTitle').textContent = step.title;
+            document.getElementById('stepDescription').textContent = step.description;
+            
+            // 控制按鈕顯示
+            document.getElementById('prevBtn').style.display = stepIndex > 0 ? 'inline-block' : 'none';
+            document.getElementById('nextBtn').textContent = stepIndex === tutorialSteps.length - 1 ? '完成' : '下一步 →';
+            
+            // 定位高亮框和提示框
+            positionElements(step, spotlight, tooltip);
+        }
+        
+        // 定位元素（核心功能）
+        function positionElements(step, spotlight, tooltip) {
+            // 根據目標 iframe 找到元素位置
+            let targetFrame, targetElement;
+            
+            if (step.target === 'header') {
+                targetFrame = document.getElementById('headerFrame');
+            } else if (step.target === 'chat') {
+                targetFrame = document.getElementById('chatFrame');
+            }
+            
+            // 等待 iframe 載入完成
+            setTimeout(() => {
+                try {
+                    const frameDoc = targetFrame.contentDocument || targetFrame.contentWindow.document;
+                    targetElement = frameDoc.querySelector(step.selector);
+                    
+                    if (targetElement) {
+                        // 計算元素在整個頁面中的位置
+                        const frameRect = targetFrame.getBoundingClientRect();
+                        const elementRect = targetElement.getBoundingClientRect();
+                        
+                        let absoluteRect = {
+                            top: frameRect.top + elementRect.top,
+                            left: frameRect.left + elementRect.left,
+                            width: elementRect.width,
+                            height: elementRect.height,
+                            right: frameRect.left + elementRect.right,
+                            bottom: frameRect.top + elementRect.bottom
+                        };
+                        
+                        // 檢查是否為手機版
+                        const isMobile = window.innerWidth <= 768;
+                        
+                        // 特殊處理：相對定位（針對刷新按鈕）
+                        if (step.position === 'relative') {
+                            // 基於選擇器位置，加上偏移量
+                            let spotlightOffsetX = (step.offsetX || 0) - 30; // 小框往左30px
+                            let spotlightOffsetY = (step.offsetY || 0);
+                            
+                            // 手機版調整：小框位置
+                            if (isMobile) {
+                                spotlightOffsetX -= 20; // 再往左20px
+                                spotlightOffsetY -= 30; // 往上30px
+                            }
+                            
+                            let spotlightRect = {
+                                top: absoluteRect.bottom + spotlightOffsetY,
+                                left: absoluteRect.right + spotlightOffsetX,
+                                width: 40, // 假設按鈕大小
+                                height: 40,
+                                right: absoluteRect.right + spotlightOffsetX + 40,
+                                bottom: absoluteRect.bottom + spotlightOffsetY + 40
+                            };
+                            
+                            // 設定高亮框位置（小框）
+                            spotlight.style.top = (spotlightRect.top - 8) + 'px';
+                            spotlight.style.left = (spotlightRect.left - 8) + 'px';
+                            spotlight.style.width = (spotlightRect.width + 16) + 'px';
+                            spotlight.style.height = (spotlightRect.height + 16) + 'px';
+                            spotlight.style.display = 'block';
+                            
+                            // 提示框基於原始位置（大框調整）
+                            absoluteRect = {
+                                ...absoluteRect,
+                                top: absoluteRect.bottom + 120, // 往下20px
+                                left: absoluteRect.right - 50  // 往左50px
+                            };
+                        } else {
+                            // 設定高亮框位置
+                            spotlight.style.top = (absoluteRect.top - 8) + 'px';
+                            spotlight.style.left = (absoluteRect.left - 8) + 'px';
+                            spotlight.style.width = (absoluteRect.width + 16) + 'px';
+                            spotlight.style.height = (absoluteRect.height + 16) + 'px';
+                            spotlight.style.display = 'block';
+                        }
+                        
+                        // 設定提示框位置
+                        positionTooltip(tooltip, absoluteRect, step.position === 'relative' ? 'left' : step.position);
+                        
+                    } else {
+                        console.warn('找不到目標元素:', step.selector);
+                        // 如果找不到元素，顯示在螢幕中央
+                        spotlight.style.display = 'none';
+                        tooltip.style.top = '50%';
+                        tooltip.style.left = '50%';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
+                    }
+                } catch (e) {
+                    console.error('定位元素時發生錯誤:', e);
+                    // 降級處理：顯示在螢幕中央
+                    spotlight.style.display = 'none';
+                    tooltip.style.top = '50%';
+                    tooltip.style.left = '50%';
+                    tooltip.style.transform = 'translate(-50%, -50%)';
+                }
+            }, 500);
+        }
+        
+        // 定位提示框
+        function positionTooltip(tooltip, targetRect, position) {
+            const tooltipWidth = 350;
+            const tooltipHeight = 200;
+            const padding = 20;
+            
+            let top, left, transform = '';
+            
+            // 檢查是否為手機版
+            const isMobile = window.innerWidth <= 768;
+            
+            // 特殊處理步驟4：下載按鈕位置調整
+            if (currentStep === 3) { // 步驟4（index為3）
+                // 往上50px，往左50px
+                targetRect = {
+                    ...targetRect,
+                    top: targetRect.top - 50,
+                    left: targetRect.left - 50,
+                    right: targetRect.right - 50,
+                    bottom: targetRect.bottom - 50
+                };
+            }
+            
+            switch (position) {
+                case 'top':
+                    top = targetRect.top - tooltipHeight - padding;
+                    left = targetRect.left + (targetRect.width / 2);
+                    transform = 'translateX(-50%)';
+                    break;
+                case 'bottom':
+                    top = targetRect.bottom + padding;
+                    left = targetRect.left + (targetRect.width / 2);
+                    transform = 'translateX(-50%)';
+                    break;
+                case 'left':
+                    top = targetRect.top + (targetRect.height / 2);
+                    left = targetRect.left - tooltipWidth - padding;
+                    transform = 'translateY(-50%)';
+                    break;
+                case 'right':
+                    top = targetRect.top + (targetRect.height / 2);
+                    left = targetRect.right + padding;
+                    transform = 'translateY(-50%)';
+                    break;
+                default:
+                    top = targetRect.bottom + padding;
+                    left = targetRect.left;
+                    break;
+            }
+            
+            // 手機版調整：步驟1、2的提示框防止被遮住
+            if (isMobile && (currentStep === 0 || currentStep === 1)) {
+                // 強制靠左對齊，留出安全邊距
+                left = 20;
+                transform = 'none';
+                
+                // 添加手機版樣式類
+                tooltip.classList.add('tutorial-tooltip-mobile-adjust');
+            } else {
+                tooltip.classList.remove('tutorial-tooltip-mobile-adjust');
+            }
+            
+            // 確保提示框不會超出螢幕邊界（桌面版）
+            if (!isMobile || (currentStep !== 0 && currentStep !== 1)) {
+                const maxWidth = window.innerWidth - tooltipWidth - padding;
+                const maxHeight = window.innerHeight - tooltipHeight - padding;
+                
+                if (left < padding) left = padding;
+                if (left > maxWidth) left = maxWidth;
+                if (top < padding) top = padding;
+                if (top > maxHeight) top = maxHeight;
+            }
+            
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+            tooltip.style.transform = transform;
+        }
+        
+        // 下一步
+        function nextStep() {
+            currentStep++;
+            if (currentStep >= tutorialSteps.length) {
+                completeTutorial();
+            } else {
+                showStep(currentStep);
+            }
+        }
+        
+        // 上一步
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+        
+        // 跳過教學
+        function skipTutorial() {
+            const dontShowAgain = document.getElementById('dontShowAgain').checked;
+            if (dontShowAgain) {
+                localStorage.setItem('tutorial-dont-show', 'true');
+            }
+            hideTutorial();
+        }
+        
+        // 完成教學
+        function completeTutorial() {
+            // 移除：不再自動記錄 tutorial-completed
+            
+            // 顯示完成訊息
+            const tooltip = document.getElementById('tutorialTooltip');
+            tooltip.innerHTML = `
+                <h3>
+                    <span class="step-icon">✓</span>
+                    教學完成！
+                </h3>
+                <p>您已經了解了系統的主要功能。現在可以開始使用建築AI助手了！</p>
+                <div class="tutorial-checkbox">
+                    <input type="checkbox" id="completeDontShowAgain">
+                    <label for="completeDontShowAgain">下次不用顯示此教學</label>
+                </div>
+                <div class="tutorial-controls">
+                    <button class="tutorial-btn tutorial-btn-primary" onclick="finishTutorial()">
+                        開始使用 →
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('tutorialSpotlight').style.display = 'none';
+        }
+        
+        // 結束教學（新增函數處理勾選狀態）
+        function finishTutorial() {
+            const dontShowAgain = document.getElementById('completeDontShowAgain').checked;
+            if (dontShowAgain) {
+                localStorage.setItem('tutorial-dont-show', 'true');
+            }
+            hideTutorial();
+        }
+        
+        // 隱藏教學
+        function hideTutorial() {
+            document.getElementById('tutorialOverlay').style.display = 'none';
+            tutorialActive = false;
+        }
+        
+        // 重置教學（供開發測試用）
+        function resetTutorial() {
+            localStorage.removeItem('tutorial-dont-show'); // 只清除 dont-show 標記
+            location.reload();
+        }
+        
+        // ===== 原有的訊息處理邏輯 =====
         
         // 處理從 header 接收的消息
         window.addEventListener('message', function(event) {
@@ -69,6 +700,26 @@
                 } else {
                     document.getElementById('chatFrame').src = 'intro.html';
                 }
+            }
+        });
+        
+        // 頁面載入完成後檢查是否顯示教學
+        window.addEventListener('load', function() {
+            checkShowTutorial();
+        });
+        
+        // 視窗大小改變時重新定位（如果教學正在進行）
+        window.addEventListener('resize', function() {
+            if (tutorialActive && currentStep < tutorialSteps.length) {
+                setTimeout(() => showStep(currentStep), 100);
+            }
+        });
+        
+        // 開發者工具：按 Ctrl+Alt+R 重置教學
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.altKey && e.key === 'r') {
+                e.preventDefault(); // 防止瀏覽器預設行為
+                resetTutorial();
             }
         });
     </script>
