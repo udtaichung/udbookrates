@@ -265,7 +265,7 @@
                 welcome: "20px",
                 input: "20px"
             },
-            welcomeMessage: '<span style="font-size: 24px;">大家早！</span><br>謝謝大家熱烈參與測試！<br>我是AI後台的工程師<br>在此拜託各位 建築師前輩<br>"務必"在AI回答之後<br>使用對話框的左下角<回饋系統>提出回饋<br>如果答案正確且精準請按👍<br>如果有系統異常、引用文件錯誤、回答具爭議之處<br>請按👎<br>並敘述遇到的情況後送出<br>用來精進AI提升正確率<br>如果回饋太少<br>系統將會自動關閉<br>再次感謝各位的參與🤝！',
+            welcomeMessage: '<span style="font-size: 24px;">早！</span><br> 我們來聊聊建築技術規則和台中的建管規定如何？',
             chatflowId: getUrlParameter('chatflowid') || "c8dc18ab-627a-4a79-8192-1521875e65e5",
             apiHost: "https://aibookrates.onrender.com",
         };
@@ -1172,6 +1172,157 @@
             },
             customCSS: ''
         })
+    </script>
+
+    <!-- Firestore 問題次數與 usageLogs 控制 -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // 與 index.html 相同的 firebaseConfig
+    const firebaseConfig = {
+        apiKey: "AIzaSyBBizQYeu8J-OM_OW2EVQrB3o1CDZ7IQkA",
+        authDomain: "bookrates-e4157.firebaseapp.com",
+        projectId: "bookrates-e4157",
+        storageBucket: "bookrates-e4157.appspot.com",
+        messagingSenderId: "1063987091365",
+        appId: "1:1063987091365:web:a04f13eb7eb464e7d1fa4c"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let lastUserMsgCount = 0;
+    let lastUserMsgs = [];
+    let userDocRef = null;
+    let userData = null;
+    let intervalStarted = false;
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user && user.emailVerified) {
+            userDocRef = doc(db, "users", user.uid);
+            // 讀取現有 user 資料
+            const snap = await getDoc(userDocRef);
+            userData = snap.exists() ? snap.data() : null;
+            // === 新增：初始化 lastUserMsgCount，避免 reload 重複扣點 ===
+            const chatbot = document.querySelector('.custom-chatbot');
+            if (chatbot && chatbot.shadowRoot) {
+                const selectors = [
+                    '.border-transparent',
+                    '.flex.items-start',
+                    '.overflow-y-auto .flex'
+                ];
+                let messageContainers = [];
+                for (const selector of selectors) {
+                    messageContainers = chatbot.shadowRoot.querySelectorAll(selector);
+                    if (messageContainers && messageContainers.length > 0) break;
+                }
+                let userMsgs = [];
+                messageContainers.forEach((container, idx) => {
+                    if (idx % 2 !== 0) {
+                        const msg = container.textContent.trim();
+                        if (msg) userMsgs.push(msg);
+                    }
+                });
+                lastUserMsgCount = userMsgs.length;
+                lastUserMsgs = userMsgs;
+            }
+            // === End 新增 ===
+            if (!intervalStarted) {
+                setInterval(checkUserMessage, 1500);
+                intervalStarted = true;
+            }
+        }
+    });
+
+    function checkUserMessage() {
+        const chatbot = document.querySelector('.custom-chatbot');
+        if (!chatbot || !chatbot.shadowRoot) return;
+        const selectors = [
+            '.border-transparent',
+            '.flex.items-start',
+            '.overflow-y-auto .flex'
+        ];
+        let messageContainers = [];
+        for (const selector of selectors) {
+            messageContainers = chatbot.shadowRoot.querySelectorAll(selector);
+            if (messageContainers && messageContainers.length > 0) break;
+        }
+        // 只抓用戶訊息（index % 2 !== 0）
+        const userMsgs = [];
+        messageContainers.forEach((container, idx) => {
+            if (idx % 2 !== 0) {
+                const msg = container.textContent.trim();
+                if (msg) userMsgs.push(msg);
+            }
+        });
+        // 僅記錄新用戶訊息
+        if (userMsgs.length > lastUserMsgCount) {
+            // 只處理新增加的用戶訊息（支援一次多發問的情境）
+            for (let i = lastUserMsgCount; i < userMsgs.length; i++) {
+                handleUserQuestion(userMsgs[i]);
+            }
+        }
+        lastUserMsgCount = userMsgs.length;
+        lastUserMsgs = userMsgs;
+    }
+
+    async function handleUserQuestion(msg) {
+        if (!userDocRef) return;
+        // 重新抓一次 userData
+        const snap = await getDoc(userDocRef);
+        userData = snap.exists() ? snap.data() : {};
+        // 檢查剩餘次數與額外點數
+        let left = userData.questionsLeft ?? 5;
+        let extra = userData.extraCredits ?? 0;
+        if (left + extra <= 0) {
+            // 只記錄，不阻止 UI
+            return;
+        }
+        // 更新 Firestore
+        const usageLogs = userData.usageLogs || [];
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const logStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())} ${pad(now.getHours())}${pad(now.getMinutes())} ${msg}`;
+        usageLogs.push(logStr);
+        try {
+            if (!snap.exists()) {
+                // 文件不存在，先建立，補齊所有欄位
+                // 優先扣除額外點數
+                let newExtra = extra > 0 ? extra - 1 : 0;
+                let newLeft = extra > 0 ? left : left - 1;
+                await setDoc(userDocRef, {
+                    email: auth.currentUser?.email || "",
+                    createdAt: serverTimestamp(),
+                    isAdmin: false,
+                    level: 1,
+                    dailyQuestions: 5,
+                    extraCredits: newExtra,
+                    lastReset: new Date().toISOString().slice(0, 10),
+                    questionsLeft: newLeft,
+                    totalQuestions: 1,
+                    lastUsed: serverTimestamp(),
+                    usageLogs: usageLogs.slice(-100)
+                });
+                console.log('[Firestore] user 文件不存在，已自動建立');
+            } else {
+                // 優先扣除額外點數
+                let newExtra = extra > 0 ? extra - 1 : 0;
+                let newLeft = extra > 0 ? left : left - 1;
+                await updateDoc(userDocRef, {
+                    extraCredits: newExtra,
+                    questionsLeft: newLeft,
+                    totalQuestions: (userData.totalQuestions || 0) + 1,
+                    lastUsed: serverTimestamp(),
+                    usageLogs: usageLogs.slice(-100)
+                });
+                console.log('[Firestore] user 文件已更新');
+            }
+        } catch (e) {
+            console.error('[Firestore] 寫入錯誤', e);
+        }
+    }
     </script>
 </body>
 </html>
