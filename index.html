@@ -1108,6 +1108,15 @@
             const userData = docSnap.data();
             updateCreditsDisplay(userData);
             checkCreditsStatus(userData);
+            // 新增：將使用者等級傳送給 header iframe
+            const headerFrame = document.getElementById('headerFrame');
+            if (headerFrame && headerFrame.contentWindow) {
+              headerFrame.contentWindow.postMessage({
+                type: 'userLevelUpdate',
+                userLevel: userData.level || 1
+              }, '*');
+              console.log('📤 傳送使用者等級到 header:', userData.level);
+            }
           } else {
             creditsDisplay.textContent = '(5)';
           }
