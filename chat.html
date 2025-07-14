@@ -1303,25 +1303,25 @@
                     questionsLeft: newLeft,
                     totalQuestions: 1,
                     lastUsed: serverTimestamp(),
-                    usageLogs: usageLogs.slice(-100)
-                });
-                console.log('[Firestore] user 文件不存在，已自動建立');
-            } else {
-                // 優先扣除額外點數
-                let newExtra = extra > 0 ? extra - 1 : 0;
-                let newLeft = extra > 0 ? left : left - 1;
-                await updateDoc(userDocRef, {
-                    extraCredits: newExtra,
-                    questionsLeft: newLeft,
-                    totalQuestions: (userData.totalQuestions || 0) + 1,
-                    lastUsed: serverTimestamp(),
-                    usageLogs: usageLogs.slice(-100)
-                });
-                console.log('[Firestore] user 文件已更新');
-            }
-        } catch (e) {
-            console.error('[Firestore] 寫入錯誤', e);
-        }
+                            usageLogs: usageLogs.slice(-50) // 只保留最新100筆使用紀錄，避免資料過大
+                        });
+                        console.log('[Firestore] user 文件不存在，已自動建立');
+                    } else {
+                        // 優先扣除額外點數
+                        let newExtra = extra > 0 ? extra - 1 : 0;
+                        let newLeft = extra > 0 ? left : left - 1;
+                        await updateDoc(userDocRef, {
+                            extraCredits: newExtra,
+                            questionsLeft: newLeft,
+                            totalQuestions: (userData.totalQuestions || 0) + 1,
+                            lastUsed: serverTimestamp(),
+                            usageLogs: usageLogs.slice(-50) // 只保留最新100筆使用紀錄，避免資料過大
+                        });
+                        console.log('[Firestore] user 文件已更新');
+                    }
+                } catch (e) {
+                    console.error('[Firestore] 寫入錯誤', e);
+                }
     }
     </script>
 </body>
