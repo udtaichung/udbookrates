@@ -454,29 +454,39 @@
         </div>
 
         <!-- 用戶列表 -->
-        <div class="users-section">
-            <h3>👥 用戶管理</h3>
-            <div id="usersLoading" class="loading">
-                <div class="spinner"></div>
-                <p>載入用戶資料中...</p>
+        <div class="users-section" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <h3 style="flex: 1 1 auto; margin: 0;">👥 用戶管理</h3>
+            <div style="min-width: 200px; flex: 0 0 auto;">
+                <label for="sortUsersSelect" style="font-weight: bold; color: #1a365d; display: block; margin-bottom: 8px;">排序方式</label>
+                <select id="sortUsersSelect" style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                    <option value="email">郵件位址 0-z</option>
+                    <option value="questionsLeft">剩餘次數排序，由少到多</option>
+                    <option value="lastUsed">最新發問時間，由新到舊</option>
+                </select>
             </div>
-            <table class="users-table hidden" id="usersTable">
-                <thead>
-                    <tr>
-                        <th>電子郵件</th>
-                        <th>等級</th>
-                        <th>剩餘次數</th>
-                        <th>額外點數</th>
-                        <th>累計發問</th>
-                        <th>最後重置</th>
-                        <th>最後使用</th>
-                        <th>註冊時間</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                </tbody>
-            </table>
+            <div style="width: 100%; margin-top: 15px;">
+                <div id="usersLoading" class="loading" style="margin-bottom: 10px;">
+                    <div class="spinner"></div>
+                    <p>載入用戶資料中...</p>
+                </div>
+                <table class="users-table hidden" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>電子郵件</th>
+                            <th>等級</th>
+                            <th>剩餘次數</th>
+                            <th>額外點數</th>
+                            <th>累計發問</th>
+                            <th>最後重置</th>
+                            <th>最後使用</th>
+                            <th>註冊時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- 等級規則管理 -->
@@ -676,31 +686,31 @@
             document.getElementById('adminPanel').classList.add('hidden');
         }
 
-        // 載入所有資料
-        async function loadAllData() {
-            try {
-                showUsersLoading(true);
-                const usersCollection = collection(db, 'users');
-                const usersSnapshot = await getDocs(usersCollection);
-                
-                allUsers = [];
-                usersSnapshot.forEach((doc) => {
-                    allUsers.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
+// 載入所有資料
+window.loadAllData = async function loadAllData() {
+    try {
+        showUsersLoading(true);
+        const usersCollection = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersCollection);
+        
+        allUsers = [];
+        usersSnapshot.forEach((doc) => {
+            allUsers.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
 
-                updateStatistics();
-                renderUsersTable();
-                showUsersLoading(false);
-                showPanelMessage('資料載入完成', 'success');
-            } catch (error) {
-                console.error('載入資料錯誤:', error);
-                showPanelMessage('載入資料時發生錯誤', 'error');
-                showUsersLoading(false);
-            }
-        }
+        updateStatistics();
+        renderUsersTable();
+        showUsersLoading(false);
+        showPanelMessage('資料載入完成', 'success');
+    } catch (error) {
+        console.error('載入資料錯誤:', error);
+        showPanelMessage('載入資料時發生錯誤', 'error');
+        showUsersLoading(false);
+    }
+}
 
         // 更新統計資訊
         function updateStatistics() {
@@ -721,7 +731,36 @@
             const tbody = document.getElementById('usersTableBody');
             tbody.innerHTML = '';
 
-            allUsers.forEach(user => {
+            // 取得排序方式
+            const sortType = document.getElementById('sortUsersSelect').value;
+
+            // 複製陣列避免直接修改原始資料
+            let sortedUsers = allUsers.slice();
+
+            // 根據選擇的排序方式排序
+            if (sortType === 'email') {
+                sortedUsers.sort((a, b) => {
+                    const emailA = (a.email || '').toLowerCase();
+                    const emailB = (b.email || '').toLowerCase();
+                    if (emailA < emailB) return -1;
+                    if (emailA > emailB) return 1;
+                    return 0;
+                });
+            } else if (sortType === 'questionsLeft') {
+                sortedUsers.sort((a, b) => {
+                    const qA = a.questionsLeft || 0;
+                    const qB = b.questionsLeft || 0;
+                    return qA - qB; // 由少到多
+                });
+            } else if (sortType === 'lastUsed') {
+                sortedUsers.sort((a, b) => {
+                    const dateA = a.lastUsed ? a.lastUsed.toDate() : new Date(0);
+                    const dateB = b.lastUsed ? b.lastUsed.toDate() : new Date(0);
+                    return dateB - dateA; // 由新到舊
+                });
+            }
+
+            sortedUsers.forEach(user => {
                 const row = document.createElement('tr');
                 const createdAt = user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString('zh-TW') : '-';
                 const lastUsed = user.lastUsed ? new Date(user.lastUsed.toDate()).toLocaleString('zh-TW') : '-';
@@ -1444,6 +1483,20 @@ logsHtml += `<tr><td style="padding-right: 20px; vertical-align: top; font-size:
                 showPanelMessage('儲存等級規則時發生錯誤: ' + error.message, 'error');
             }
         });
+    </script>
+
+    <script type="module">
+        // 監聽排序下拉選單變化，重新載入資料並渲染用戶表格
+        const sortSelect = document.getElementById('sortUsersSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', async () => {
+                await window.loadAllData();
+            });
+            // 也監聽 'input' 事件，確保下拉欄位變更時觸發
+            sortSelect.addEventListener('input', async () => {
+                await window.loadAllData();
+            });
+        }
     </script>
 </body>
 </html>
