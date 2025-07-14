@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建築AI助手 - 管理後台</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #00ff88;
+        }
+
+        .header h1 {
+            color: #1a365d;
+            font-size: 32px;
+            margin: 0;
+        }
+
+        .header .admin-info {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* 登入界面樣式 */
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            border: 3px solid #00ff88;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #00ff88, #00e676);
+            color: #1a365d;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #e2e8f0, #cbd5e0);
+            color: #4a5568;
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #fed7d7, #feb2b2);
+            color: #742a2a;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 統計卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #1a365d;
+            font-size: 18px;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #00ff88;
+            margin: 10px 0;
+        }
+
+        /* 操作區域 */
+        .action-section {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .action-section h3 {
+            margin: 0 0 20px 0;
+            color: #1a365d;
+            font-size: 20px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-card h4 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-group input, .input-group select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* 用戶列表 */
+        .users-section {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .users-section h3 {
+            margin: 0 0 20px 0;
+            color: #1a365d;
+            font-size: 20px;
+        }
+
+        .users-table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .users-table th, .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .users-table th {
+            background: #00ff88;
+            color: #1a365d;
+            font-weight: bold;
+        }
+
+        .users-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .user-actions .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        /* 訊息提示 */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #38a169;
+            border: 1px solid #9ae6b4;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #e53e3e;
+            border: 1px solid #feb2b2;
+        }
+
+        .message.warning {
+            background: #fefcbf;
+            color: #d69e2e;
+            border: 1px solid #faf089;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 載入動畫 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .users-table {
+                font-size: 14px;
+            }
+
+            .users-table th, .users-table td {
+                padding: 8px;
+            }
+
+            .user-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 管理員登入界面 -->
+    <div id="adminAuth" class="auth-container">
+        <h2 class="auth-title">🔧 管理員登入</h2>
+        <div id="authMessage" class="message hidden"></div>
+        
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <label class="form-label">管理員電子郵件</label>
+                <!-- 管理員電子郵件輸入 -->
+                <input type="email" id="adminEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密碼</label>
+                <input type="password" id="adminPassword" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="adminLoginBtn" style="width: 100%;">
+                登入管理後台
+            </button>
+        </form>
+    </div>
+
+    <!-- 管理後台主界面 -->
+    <div id="adminPanel" class="container hidden">
+        <div class="header">
+            <h1>🏗️ 建築AI助手 - 管理後台</h1>
+            <div class="admin-info">
+                管理員：<span id="adminEmailDisplay"></span>
+                <button class="btn btn-danger" onclick="logout()" style="margin-left: 20px;">登出</button>
+            </div>
+        </div>
+
+        <div id="panelMessage" class="message hidden"></div>
+
+        <!-- 統計資訊 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>總用戶數</h3>
+                <div class="number" id="totalUsers">-</div>
+                <p>已註冊用戶</p>
+            </div>
+            <div class="stat-card">
+                <h3>今日活躍</h3>
+                <div class="number" id="activeToday">-</div>
+                <p>今日有使用的用戶</p>
+            </div>
+            <div class="stat-card">
+                <h3>平均等級</h3>
+                <div class="number" id="avgLevel">-</div>
+                <p>用戶平均等級</p>
+            </div>
+            <div class="stat-card">
+                <h3>總額外點數</h3>
+                <div class="number" id="totalCredits">-</div>
+                <p>所有用戶額外點數總和</p>
+            </div>
+        </div>
+
+        <!-- 批量操作區域 -->
+        <div class="action-section">
+            <h3>📊 批量操作</h3>
+            <div class="action-grid">
+                <div class="action-card">
+                    <h4>批量調整等級</h4>
+                    <div class="input-group">
+                        <select id="batchLevelSelect">
+                            <option value="">選擇等級</option>
+                            <option value="1">等級 1</option>
+                            <option value="2">等級 2</option>
+                            <option value="3">等級 3</option>
+                            <option value="4">等級 4</option>
+                            <option value="5">等級 5</option>
+                            <option value="6">等級 6</option>
+                            <option value="7">等級 7</option>
+                            <option value="8">等級 8</option>
+                            <option value="9">等級 9</option>
+                            <option value="10">等級 10</option>
+                        </select>
+                        <input type="number" id="batchLevelCredits" placeholder="增加額外點數" min="0">
+                    </div>
+                    <button class="btn btn-primary" onclick="batchUpdateByLevel()">
+                        執行批量調整
+                    </button>
+                </div>
+
+                <div class="action-card">
+                    <h4>全體用戶操作</h4>
+                    <div class="input-group">
+                        <input type="number" id="allUsersCredits" placeholder="增加額外點數" min="0">
+                        <button class="btn btn-secondary" onclick="addCreditsToAll()">
+                            全體增加
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-warning" onclick="resetAllDailyQuestions()">
+                            重置所有人今日次數
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <h4>系統維護</h4>
+                    <div class="input-group">
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            🔄 重新載入資料
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-warning" onclick="exportUserData()">
+                            📄 匯出用戶資料
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用戶列表 -->
+        <div class="users-section">
+            <h3>👥 用戶管理</h3>
+            <div id="usersLoading" class="loading">
+                <div class="spinner"></div>
+                <p>載入用戶資料中...</p>
+            </div>
+            <table class="users-table hidden" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>電子郵件</th>
+                        <th>等級</th>
+                        <th>剩餘次數</th>
+                        <th>額外點數</th>
+                        <th>累計發問</th>
+                        <th>最後重置</th>
+                        <th>最後使用</th>
+                        <th>註冊時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 等級規則管理 -->
+        <div class="action-section">
+            <h3>🛠️ 等級規則管理</h3>
+            <form id="levelRulesForm">
+                <table class="users-table" style="margin-bottom:20px;">
+                    <thead>
+                        <tr>
+                            <th>等級</th>
+                            <th>每日補充</th>
+                            <th>最高上限</th>
+                        </tr>
+                    </thead>
+                    <tbody id="levelRulesTableBody">
+                        <!-- 由 JS 動態產生 -->
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">儲存等級規則</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 編輯用戶彈窗 -->
+    <div id="editUserModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 20px 0; color: #1a365d;">編輯用戶資料</h3>
+            <div id="editUserForm">
+                <div class="form-group">
+                    <label class="form-label">電子郵件</label>
+                    <!-- 編輯用戶彈窗顯示 email -->
+                    <input type="email" id="editUserEmail" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">等級</label>
+                    <select id="editUserLevel" class="form-input">
+                        <option value="0">等級 0</option>
+                        <option value="1">等級 1</option>
+                        <option value="2">等級 2</option>
+                        <option value="3">等級 3</option>
+                        <option value="4">等級 4</option>
+                        <option value="5">等級 5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">每日問題次數</label>
+                    <input type="number" id="editUserDailyQuestions" class="form-input" min="1" max="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">剩餘次數</label>
+                    <input type="number" id="editUserQuestionsLeft" class="form-input" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">額外點數</label>
+                    <input type="number" id="editUserExtraCredits" class="form-input" min="0" max="1000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">最高可累積次數</label>
+                    <input type="number" id="editUserMaxQuestions" class="form-input" readonly>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button class="btn btn-primary" onclick="saveUserData()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 和應用邏輯 -->
+    <script type="module">
+        // Firebase 配置
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs, 
+            doc, 
+            updateDoc, 
+            query, 
+            where, 
+            writeBatch,
+            serverTimestamp,
+            setDoc, getDoc 
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBizQYeu8J-OM_OW2EVQrB3o1CDZ7IQkA",
+            authDomain: "bookrates-e4157.firebaseapp.com",
+            projectId: "bookrates-e4157",
+            storageBucket: "bookrates-e4157.firebasestorage.app",
+            messagingSenderId: "1063987091365",
+            appId: "1:1063987091365:web:a04f13eb7eb464e7d1fa4c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 全局變數
+        let currentAdmin = null;
+        let allUsers = [];
+        let editingUserId = null;
+
+        // 預設等級規則
+        const defaultLevelRules = [
+            { level: 0, daily: 0, max: 0 },
+            { level: 1, daily: 5, max: 8 },
+            { level: 2, daily: 10, max: 20 },
+            { level: 3, daily: 20, max: 50 },
+            { level: 4, daily: 25, max: 100 },
+            { level: 5, daily: 100, max: 1000 }
+        ];
+
+        // Firestore 等級規則文件
+        const levelRulesDocRef = doc(db, 'config', 'levelRules');
+
+        // 監聽認證狀態
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentAdmin = user;
+                // 不自動切換到管理頁，等登入流程確認有 Firestore 資料時才切換
+            } else {
+                currentAdmin = null;
+                showAuthScreen();
+            }
+        });
+
+        // 管理員登入表單
+        let failedLoginAttempts = 0; // 新增錯誤嘗試計數器
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            setAuthLoading(true);
+
+            // 固定延遲2秒，確保預讀Firestore資料
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // 錯誤嘗試延遲（2的failedLoginAttempts次方秒，最小2秒）
+            if (failedLoginAttempts > 0) {
+                const delaySeconds = Math.pow(2, failedLoginAttempts);
+                await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // 登入成功，重置錯誤計數
+                failedLoginAttempts = 0;
+
+                // 嘗試讀取 Firestore users collection
+                try {
+                    const usersCollection = collection(db, 'users');
+                    const usersSnapshot = await getDocs(usersCollection);
+                    if (!usersSnapshot.empty) {
+                        // 有資料，切換到管理員頁面
+                        currentAdmin = userCredential.user;
+                        showAdminPanel();
+                        await loadAllData();
+                        return;
+                    } else {
+                        // 無資料，強制登出
+                        await signOut(auth);
+                        return;
+                    }
+                } catch (firestoreError) {
+                    // Firestore 權限錯誤，強制登出
+                    await signOut(auth);
+                    return;
+                }
+            } catch (error) {
+                // 登入錯誤，錯誤計數加1
+                failedLoginAttempts++;
+                showAuthMessage(getFirebaseErrorMessage(error.code), 'error');
+            } finally {
+                setAuthLoading(false);
+            }
+        });
+
+        // 顯示管理面板
+        function showAdminPanel() {
+            document.getElementById('adminAuth').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('adminEmailDisplay').textContent = currentAdmin.email;
+            loadLevelRules();
+        }
+
+        // 顯示登入界面
+        function showAuthScreen() {
+            document.getElementById('adminAuth').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+        }
+
+        // 載入所有資料
+        async function loadAllData() {
+            try {
+                showUsersLoading(true);
+                const usersCollection = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersCollection);
+                
+                allUsers = [];
+                usersSnapshot.forEach((doc) => {
+                    allUsers.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                updateStatistics();
+                renderUsersTable();
+                showUsersLoading(false);
+                showPanelMessage('資料載入完成', 'success');
+            } catch (error) {
+                console.error('載入資料錯誤:', error);
+                showPanelMessage('載入資料時發生錯誤', 'error');
+                showUsersLoading(false);
+            }
+        }
+
+        // 更新統計資訊
+        function updateStatistics() {
+            const totalUsers = allUsers.length;
+            const today = new Date().toISOString().split('T')[0];
+            const activeToday = allUsers.filter(user => user.lastReset === today).length;
+            const avgLevel = totalUsers > 0 ? (allUsers.reduce((sum, user) => sum + (typeof user.level === 'number' ? user.level : 5), 0) / totalUsers).toFixed(1) : 0;
+            const totalCredits = allUsers.reduce((sum, user) => sum + (user.extraCredits || 0), 0);
+
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('activeToday').textContent = activeToday;
+            document.getElementById('avgLevel').textContent = avgLevel;
+            document.getElementById('totalCredits').textContent = totalCredits;
+        }
+
+        // 渲染用戶表格
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                const createdAt = user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString('zh-TW') : '-';
+                const lastUsed = user.lastUsed ? new Date(user.lastUsed.toDate()).toLocaleString('zh-TW') : '-';
+                const totalQuestions = user.totalQuestions || 0;
+                const logsCount = user.usageLogs ? user.usageLogs.length : 0;
+                
+                row.innerHTML = `
+                    <td>${user.email}</td>
+                    <td>${typeof user.level === 'number' ? user.level : 5}</td>
+                    <td>${user.questionsLeft || 0}</td>
+                    <td>${user.extraCredits || 0}</td>
+                    <td><strong>${totalQuestions}</strong></td>
+                    <td>${user.lastReset || '-'}</td>
+                    <td style="font-size: 12px;">${lastUsed}</td>
+                    <td>${createdAt}</td>
+                    <td class="user-actions">
+                        <button class="btn btn-primary" onclick="editUser('${user.id}')">編輯</button>
+                        <button class="btn btn-secondary" onclick="viewUsageLogs('${user.id}')" title="查看最近 ${logsCount} 筆記錄">
+                            記錄 (${logsCount})
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetUserQuestions('${user.id}')">重置次數</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('usersTable').classList.remove('hidden');
+        }
+
+        // 編輯用戶
+        window.editUser = function(userId) {
+            console.log('📝 編輯用戶:', userId);
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) {
+                console.error('找不到用戶:', userId);
+                showPanelMessage('找不到指定用戶', 'error');
+                return;
+            }
+            editingUserId = userId;
+            document.getElementById('editUserEmail').value = user.email || '';
+            document.getElementById('editUserLevel').value = (typeof user.level === 'number') ? user.level : 5;
+            // 依等級自動帶入 dailyQuestions
+            const level = (typeof user.level === 'number') ? user.level : 5;
+            const rules = getCurrentLevelRules();
+            const rule = rules.find(r => r.level == level);
+            document.getElementById('editUserDailyQuestions').value = rule ? rule.daily : 10;
+            document.getElementById('editUserQuestionsLeft').value = user.questionsLeft || 0;
+            document.getElementById('editUserExtraCredits').value = user.extraCredits || 0;
+            // 新增 maxQuestions 欄位顯示
+            if (!document.getElementById('editUserMaxQuestions')) {
+                const maxDiv = document.createElement('div');
+                maxDiv.className = 'form-group';
+                maxDiv.innerHTML = `<label class="form-label">最高可累積次數</label><input type="number" id="editUserMaxQuestions" class="form-input" readonly>`;
+                document.getElementById('editUserForm').insertBefore(maxDiv, document.getElementById('editUserQuestionsLeft').parentNode);
+            }
+            document.getElementById('editUserMaxQuestions').value = rule ? rule.max : 20;
+            const modal = document.getElementById('editUserModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log('✅ 編輯彈窗已顯示');
+            } else {
+                console.error('找不到編輯彈窗元素');
+            }
+        };
+
+        // 等級變動時自動更新 dailyQuestions 與 maxQuestions 欄位
+        const editUserLevelSelect = document.getElementById('editUserLevel');
+        if (editUserLevelSelect) {
+            editUserLevelSelect.addEventListener('change', function() {
+                const level = parseInt(this.value);
+                const rules = getCurrentLevelRules();
+                const rule = rules.find(r => r.level == level);
+                document.getElementById('editUserDailyQuestions').value = rule ? rule.daily : 10;
+                if (document.getElementById('editUserMaxQuestions')) {
+                    document.getElementById('editUserMaxQuestions').value = rule ? rule.max : 20;
+                }
+            });
+        }
+
+        // 取得目前等級規則
+        function getCurrentLevelRules() {
+            const rows = [];
+            document.querySelectorAll('#levelRulesTableBody tr').forEach(tr => {
+                const level = parseInt(tr.children[0].textContent);
+                const daily = parseInt(tr.querySelector('.level-daily').value);
+                const max = parseInt(tr.querySelector('.level-max').value);
+                rows.push({ level, daily, max });
+            });
+            return rows.length ? rows : defaultLevelRules;
+        }
+
+        // 儲存用戶資料
+        window.saveUserData = async function() {
+            console.log('💾 儲存用戶資料');
+            if (!editingUserId) {
+                console.error('沒有正在編輯的用戶');
+                showPanelMessage('沒有正在編輯的用戶', 'error');
+                return;
+            }
+            const level = parseInt(document.getElementById('editUserLevel').value);
+            const dailyQuestions = parseInt(document.getElementById('editUserDailyQuestions').value);
+            const maxQuestions = document.getElementById('editUserMaxQuestions') ? parseInt(document.getElementById('editUserMaxQuestions').value) : 20;
+            const questionsLeft = parseInt(document.getElementById('editUserQuestionsLeft').value);
+            const extraCredits = parseInt(document.getElementById('editUserExtraCredits').value);
+            if (isNaN(level) || level < 0 || level > 5) {
+                showPanelMessage('等級必須在 0-5 之間', 'error');
+                return;
+            }
+            if (isNaN(dailyQuestions) || dailyQuestions < 0 || dailyQuestions > 100) {
+                showPanelMessage('每日問題次數必須在 0-100 之間', 'error');
+                return;
+            }
+            if (isNaN(maxQuestions) || maxQuestions < 0 || maxQuestions > 1000) {
+                showPanelMessage('最高可累積次數必須在 0-1000 之間', 'error');
+                return;
+            }
+            if (isNaN(questionsLeft) || questionsLeft < 0 || questionsLeft > 1000) {
+                showPanelMessage('剩餘次數必須在 0-1000 之間', 'error');
+                return;
+            }
+            if (isNaN(extraCredits) || extraCredits < 0 || extraCredits > 1000) {
+                showPanelMessage('額外點數必須在 0-1000 之間', 'error');
+                return;
+            }
+            try {
+                console.log('📤 更新用戶資料到資料庫');
+                await updateDoc(doc(db, 'users', editingUserId), {
+                    level: level,
+                    dailyQuestions: dailyQuestions,
+                    maxQuestions: maxQuestions,
+                    questionsLeft: questionsLeft,
+                    extraCredits: extraCredits
+                });
+                console.log('✅ 用戶資料更新成功');
+                closeEditModal();
+                await loadAllData();
+                showPanelMessage('用戶資料更新成功', 'success');
+            } catch (error) {
+                console.error('❌ 更新用戶資料錯誤:', error);
+                showPanelMessage('更新用戶資料時發生錯誤: ' + error.message, 'error');
+            }
+        };
+
+        // 關閉編輯彈窗
+        window.closeEditModal = function() {
+            console.log('❌ 關閉編輯彈窗');
+            const modal = document.getElementById('editUserModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            editingUserId = null;
+            document.getElementById('editUserEmail').value = '';
+            document.getElementById('editUserLevel').value = '5';
+            document.getElementById('editUserDailyQuestions').value = '10';
+            document.getElementById('editUserQuestionsLeft').value = '0';
+            document.getElementById('editUserExtraCredits').value = '0';
+            if (document.getElementById('editUserMaxQuestions')) {
+                document.getElementById('editUserMaxQuestions').value = '20';
+            }
+            console.log('✅ 編輯彈窗已關閉並清空');
+        };
+
+        // 重置單個用戶的問題次數
+        window.resetUserQuestions = async function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            if (!confirm(`確定要重置用戶 ${user.email} 的今日問題次數嗎？`)) return;
+
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                await updateDoc(doc(db, 'users', userId), {
+                    questionsLeft: user.dailyQuestions || 10,
+                    lastReset: today
+                });
+
+                await loadAllData();
+                showPanelMessage(`用戶 ${user.email} 的問題次數已重置`, 'success');
+            } catch (error) {
+                console.error('重置問題次數錯誤:', error);
+                showPanelMessage('重置問題次數時發生錯誤', 'error');
+            }
+        };
+
+        // 批量調整等級用戶
+        window.batchUpdateByLevel = async function() {
+            const targetLevel = document.getElementById('batchLevelSelect').value;
+            const creditsToAdd = parseInt(document.getElementById('batchLevelCredits').value) || 0;
+
+            if (!targetLevel) {
+                showPanelMessage('請選擇要調整的等級', 'warning');
+                return;
+            }
+
+            const targetUsers = allUsers.filter(user => (user.level || 5) == targetLevel);
+            if (targetUsers.length === 0) {
+                showPanelMessage(`沒有找到等級 ${targetLevel} 的用戶`, 'warning');
+                return;
+            }
+
+            if (!confirm(`確定要為 ${targetUsers.length} 位等級 ${targetLevel} 的用戶增加 ${creditsToAdd} 點額外點數嗎？`)) return;
+
+            try {
+                const batch = writeBatch(db);
+                targetUsers.forEach(user => {
+                    const userRef = doc(db, 'users', user.id);
+                    batch.update(userRef, {
+                        extraCredits: (user.extraCredits || 0) + creditsToAdd
+                    });
+                });
+
+                await batch.commit();
+                await loadAllData();
+                showPanelMessage(`成功為 ${targetUsers.length} 位用戶增加額外點數`, 'success');
+                
+                // 清空輸入框
+                document.getElementById('batchLevelSelect').value = '';
+                document.getElementById('batchLevelCredits').value = '';
+            } catch (error) {
+                console.error('批量更新錯誤:', error);
+                showPanelMessage('批量更新時發生錯誤', 'error');
+            }
+        };
+
+        // 全體用戶增加點數
+        window.addCreditsToAll = async function() {
+            const creditsToAdd = parseInt(document.getElementById('allUsersCredits').value);
+            
+            if (!creditsToAdd || creditsToAdd <= 0) {
+                showPanelMessage('請輸入有效的點數', 'warning');
+                return;
+            }
+
+            if (!confirm(`確定要為所有 ${allUsers.length} 位用戶增加 ${creditsToAdd} 點額外點數嗎？`)) return;
+
+            try {
+                const batch = writeBatch(db);
+                allUsers.forEach(user => {
+                    const userRef = doc(db, 'users', user.id);
+                    batch.update(userRef, {
+                        extraCredits: (user.extraCredits || 0) + creditsToAdd
+                    });
+                });
+
+                await batch.commit();
+                await loadAllData();
+                showPanelMessage(`成功為所有用戶增加 ${creditsToAdd} 點額外點數`, 'success');
+                
+                // 清空輸入框
+                document.getElementById('allUsersCredits').value = '';
+            } catch (error) {
+                console.error('全體增加點數錯誤:', error);
+                showPanelMessage('全體增加點數時發生錯誤', 'error');
+            }
+        };
+
+        // 重置所有人今日次數
+        window.resetAllDailyQuestions = async function() {
+            if (!confirm(`確定要重置所有 ${allUsers.length} 位用戶的今日問題次數嗎？`)) return;
+
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const batch = writeBatch(db);
+
+                allUsers.forEach(user => {
+                    const userRef = doc(db, 'users', user.id);
+                    // 保留較多的剩餘次數，避免被重置成較少
+                    const newQuestionsLeft = Math.max(user.questionsLeft || 0, user.dailyQuestions || 10);
+                    batch.update(userRef, {
+                        questionsLeft: newQuestionsLeft,
+                        lastReset: today
+                    });
+                });
+
+                await batch.commit();
+                await loadAllData();
+                showPanelMessage('所有用戶的今日問題次數已重置（保留較多剩餘次數）', 'success');
+            } catch (error) {
+                console.error('重置所有問題次數錯誤:', error);
+                showPanelMessage('重置所有問題次數時發生錯誤', 'error');
+            }
+        };
+
+        // 重新載入資料
+        window.refreshData = async function() {
+            await loadAllData();
+        };
+
+        // 匯出用戶資料
+        window.exportUserData = function() {
+            const csvContent = generateCSV();
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `建築AI助手用戶資料_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showPanelMessage('用戶資料已匯出', 'success');
+        };
+
+        // 生成 CSV 內容
+        function generateCSV() {
+            const headers = ['電子郵件', '等級', '每日問題次數', '剩餘次數', '額外點數', '最後重置', '註冊時間'];
+            const rows = allUsers.map(user => [
+                user.email,
+                typeof user.level === 'number' ? user.level : 5,
+                user.dailyQuestions || 10,
+                user.questionsLeft || 0,
+                user.extraCredits || 0,
+                user.lastReset || '',
+                user.createdAt ? new Date(user.createdAt.toDate()).toLocaleString('zh-TW') : ''
+            ]);
+
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(field => `"${field}"`).join(','))
+                .join('\n');
+
+            return '\uFEFF' + csvContent; // BOM for UTF-8
+        }
+
+        // 登出
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('登出錯誤:', error);
+            }
+        };
+
+        // 顯示載入狀態
+        function showUsersLoading(loading) {
+            if (loading) {
+                document.getElementById('usersLoading').classList.remove('hidden');
+                document.getElementById('usersTable').classList.add('hidden');
+            } else {
+                document.getElementById('usersLoading').classList.add('hidden');
+            }
+        }
+
+        // 設置認證載入狀態
+        function setAuthLoading(loading) {
+            const btn = document.getElementById('adminLoginBtn');
+            if (loading) {
+                btn.disabled = true;
+                btn.textContent = '登入中...';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '登入管理後台';
+            }
+        }
+
+        // 顯示認證訊息
+        function showAuthMessage(message, type) {
+            const messageDiv = document.getElementById('authMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // 顯示面板訊息
+        function showPanelMessage(message, type) {
+            const messageDiv = document.getElementById('panelMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Firebase 錯誤訊息翻譯
+        function getFirebaseErrorMessage(errorCode) {
+            const errorMessages = {
+                'auth/user-not-found': '找不到此管理員帳號',
+                'auth/wrong-password': '密碼錯誤',
+                'auth/invalid-email': '電子郵件格式不正確',
+                'auth/too-many-requests': '嘗試次數過多，請稍後再試',
+                'auth/user-disabled': '此帳號已被停用',
+                'auth/invalid-credential': '登入憑證無效，請檢查電子郵件和密碼'
+            };
+            return errorMessages[errorCode] || '發生未知錯誤，請稍後再試';
+        }
+
+        // 查看使用記錄
+        window.viewUsageLogs = function(userId) {
+            console.log('📊 查看使用記錄:', userId);
+            
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) {
+                console.error('找不到用戶:', userId);
+                showPanelMessage('找不到指定用戶', 'error');
+                return;
+            }
+
+            const logs = user.usageLogs || [];
+            
+            // 創建記錄查看彈窗
+            const modal = document.createElement('div');
+            modal.id = 'usageLogsModal';
+            modal.style.cssText = `
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%; 
+                background: rgba(0,0,0,0.8); 
+                z-index: 2000; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center;
+                font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; 
+                padding: 30px; 
+                border-radius: 15px; 
+                max-width: 800px; 
+                width: 90%; 
+                max-height: 80%; 
+                overflow-y: auto;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+                font-family: monospace;
+                white-space: pre-wrap;
+                line-height: 1.5;
+            `;
+            
+            let logsHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #1a365d; font-size: 24px;">
+                        📊 ${user.email} 的使用記錄
+                    </h3>
+                    <button onclick="closeUsageLogsModal()" style="
+                        background: #e53e3e; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 50%; 
+                        width: 30px; 
+                        height: 30px; 
+                        cursor: pointer; 
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">×</button>
+                </div>
+                
+                <div style="
+                    background: linear-gradient(145deg, #f0f8ff, #e6f3ff); 
+                    padding: 20px; 
+                    border-radius: 10px; 
+                    margin-bottom: 25px;
+                    border: 2px solid #00ff88;
+                    font-family: Arial, sans-serif;
+                ">
+                    <div style="display: flex; gap: 20px; font-size: 14px; color: #666;">
+                        <div><strong>累計發問:</strong> ${user.totalQuestions || 0}</div>
+                        <div><strong>記錄筆數:</strong> ${logs.length}</div>
+                        <div><strong>剩餘次數:</strong> ${user.questionsLeft || 0}</div>
+                        <div><strong>額外點數:</strong> ${user.extraCredits || 0}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (logs.length === 0) {
+                logsHtml += `
+                    <div style="
+                        text-align: center; 
+                        padding: 40px; 
+                        color: #999; 
+                        background: #f9f9f9; 
+                        border-radius: 10px;
+                        border: 2px dashed #ddd;
+                        font-family: Arial, sans-serif;
+                    ">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📝</div>
+                        <div style="font-size: 18px; margin-bottom: 10px;">尚無使用記錄</div>
+                        <div style="font-size: 14px;">此用戶還沒有發問過任何問題</div>
+                    </div>
+                `;
+            } else {
+                logsHtml += `
+                <pre style="
+                    background: #fff; 
+                    border: 2px solid #e0e0e0; 
+                    border-radius: 10px; 
+                    max-height: 400px; 
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    padding: 15px;
+                    font-size: 21px;
+                    color: #333;
+                    white-space: pre-wrap;
+                    word-break: break-word;
+                    margin: 0;
+                ">
+                `;
+
+                // 顯示記錄，最新的在前面，從上到下，並在第一行加強制換行，且每筆記錄間加上分隔線，且日期與發問分兩欄對齊，使用 HTML 表格格式
+                logsHtml += '\n<table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 21px;">\n';
+                logsHtml += '<thead><tr><th style="text-align:left; padding-right: 20px; border-bottom: 2px solid #e0e0e0;">日期</th><th style="text-align:left; border-bottom: 2px solid #e0e0e0;">發問內容</th></tr></thead>\n<tbody>\n';
+                    logs.slice().reverse().forEach((log, index) => {
+                        const parts = log.split(' ');
+                        let datePart = '';
+                        let questionPart = '';
+                        if (parts.length >= 2) {
+                            datePart = parts[0] + ' ' + parts[1];
+                            questionPart = parts.slice(2).join(' ');
+                        } else {
+                            questionPart = log;
+                        }
+                        // 將日期拆成三行顯示：年、月日、時間
+                        let dateOnly = '';
+                        let timeOnly = '';
+                        const dateTimeMatch = datePart.match(/^(\d{4})(\d{2})(\d{2})\s*(\d{4})$/);
+                        if (dateTimeMatch) {
+                            // 將日期拆成三行顯示：年、月日、時間
+                            dateOnly = `${dateTimeMatch[1]}<br>${dateTimeMatch[2]}${dateTimeMatch[3]}<br>${dateTimeMatch[4]}`;
+                            timeOnly = '';
+                        } else {
+                            dateOnly = datePart;
+                        }
+                        // 將日期欄位字體改小一點，讓三行日期看起來更整齊
+logsHtml += `<tr><td style="padding-right: 20px; vertical-align: top; font-size: 16px; line-height: 1.2; width: 80px; white-space: nowrap;">${dateOnly}${timeOnly ? '<br>' + timeOnly : ''}</td><td>${questionPart}</td></tr>\n`;
+                        if (index < logs.length - 1) {
+                            logsHtml += `<tr><td colspan="2" style="border-bottom: 1px solid #ccc; padding: 5px 0;"></td></tr>\n`;
+                        }
+                    });
+                logsHtml += '</tbody></table>\n';
+
+                logsHtml += '</pre>';
+            }
+            
+            logsHtml += `
+                <div style="
+                    display: flex; 
+                    justify-content: flex-end; 
+                    margin-top: 25px; 
+                    padding-top: 20px; 
+                    border-top: 2px solid #e0e0e0;
+                    font-family: Arial, sans-serif;
+                ">
+                    <button class="btn btn-secondary" onclick="closeUsageLogsModal()" style="margin-right: 10px;">
+                        關閉
+                    </button>
+                    <button class="btn btn-primary" onclick="exportUserLogs('${userId}')">
+                        📄 匯出記錄
+                    </button>
+                </div>
+            `;
+            
+            content.innerHTML = logsHtml;
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            console.log('✅ 使用記錄彈窗已顯示');
+        };
+
+        // 關閉使用記錄彈窗
+        window.closeUsageLogsModal = function() {
+            const modal = document.getElementById('usageLogsModal');
+            if (modal) {
+                modal.remove();
+                console.log('✅ 使用記錄彈窗已關閉');
+            }
+        };
+
+        // 改進的匯出用戶記錄功能
+        window.exportUserLogs = function(userId) {
+            console.log('📤 匯出用戶記錄:', userId);
+            
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) {
+                showPanelMessage('找不到指定用戶', 'error');
+                return;
+            }
+
+            const logs = user.usageLogs || [];
+            
+            if (logs.length === 0) {
+                showPanelMessage('該用戶沒有使用記錄可匯出', 'warning');
+                return;
+            }
+            
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            csvContent += '序號,使用記錄,解析時間,解析問題,原始時間戳\n';
+            
+            logs.forEach((log, index) => {
+                // 解析記錄格式：MMDDHHMI-問題前6字
+                const parts = log.split('-');
+                let parsedTime = '無法解析';
+                let questionPart = '無法解析';
+                
+                if (parts.length === 2) {
+                    const timePart = parts[0]; // MMDDHHMI
+                    questionPart = parts[1]; // 問題前6字
+                    
+                    // 解析時間 (假設是今年)
+                    if (timePart.length === 8) {
+                        const currentYear = new Date().getFullYear();
+                        const month = timePart.substring(0, 2);
+                        const day = timePart.substring(2, 4);
+                        const hour = timePart.substring(4, 6);
+                        const minute = timePart.substring(6, 8);
+                        
+                        parsedTime = `${currentYear}/${month}/${day} ${hour}:${minute}`;
+                    }
+                }
+                
+                const now = new Date().toLocaleString('zh-TW');
+                csvContent += `"${index + 1}","${log}","${parsedTime}","${questionPart}","${now}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const fileName = `${user.email.replace('@', '_')}_使用記錄_${new Date().toISOString().split('T')[0]}.csv`;
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showPanelMessage(`${user.email} 的使用記錄已匯出 (${logs.length} 筆)`, 'success');
+            console.log('✅ 用戶記錄匯出完成');
+        };
+
+        // 點擊彈窗外部關閉
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('usageLogsModal');
+            if (modal && e.target === modal) {
+                closeUsageLogsModal();
+            }
+        });
+
+        // ESC 鍵關閉
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('usageLogsModal');
+                if (modal) {
+                    closeUsageLogsModal();
+                }
+            }
+        });
+
+        // 載入等級規則
+        async function loadLevelRules() {
+            try {
+                const docSnap = await getDoc(levelRulesDocRef);
+                let rules = defaultLevelRules;
+                if (docSnap.exists()) {
+                    rules = docSnap.data().rules;
+                }
+                renderLevelRulesTable(rules);
+            } catch (e) {
+                renderLevelRulesTable(defaultLevelRules);
+            }
+        }
+
+        // 渲染等級規則表格
+        function renderLevelRulesTable(rules) {
+            const tbody = document.getElementById('levelRulesTableBody');
+            tbody.innerHTML = '';
+            rules.forEach(rule => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${rule.level}</td>
+                        <td><input type="number" min="0" max="1000" value="${rule.daily}" data-level="${rule.level}" class="level-daily" style="width:80px;"></td>
+                        <td><input type="number" min="0" max="10000" value="${rule.max}" data-level="${rule.level}" class="level-max" style="width:100px;"></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 儲存等級規則
+        document.getElementById('levelRulesForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const rows = [];
+            document.querySelectorAll('#levelRulesTableBody tr').forEach(tr => {
+                const level = parseInt(tr.children[0].textContent);
+                const daily = parseInt(tr.querySelector('.level-daily').value);
+                const max = parseInt(tr.querySelector('.level-max').value);
+                rows.push({ level, daily, max });
+            });
+            try {
+                console.log('嘗試寫入等級規則到 Firestore...');
+                await setDoc(levelRulesDocRef, { rules: rows });
+                showPanelMessage('等級規則已儲存', 'success');
+                // 新增：批次更新所有用戶 dailyQuestions、maxQuestions 與 questionsLeft
+                const usersCollection = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersCollection);
+                const batch = writeBatch(db);
+                usersSnapshot.forEach((docSnap) => {
+                    const user = docSnap.data();
+                    const userLevel = (typeof user.level === 'number') ? user.level : 5;
+                    const rule = rows.find(r => r.level == userLevel);
+                    if (rule) {
+                batch.update(doc(db, 'users', docSnap.id), {
+                    dailyQuestions: rule.daily,
+                    maxQuestions: rule.max
+                });
+                    }
+                });
+                await batch.commit();
+                console.log('✅ 所有用戶的等級規則已更新');
+            } catch (error) {
+                console.error('儲存等級規則錯誤:', error);
+                showPanelMessage('儲存等級規則時發生錯誤: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
