@@ -41,7 +41,7 @@
             color: #333;
             flex: 1;
             text-align: left;
-            white-space: nowrap; /* 防止標題斷行 */
+            white-space: pre-wrap; /* 改為保留空白字元並換行 */
             margin: 0; /* 移除標題的 margin */
         }
         
@@ -229,7 +229,7 @@
 <body>
     <div class="controls-container" id="controlsContainer">
         <!-- 標題區塊 -->
-        <div class="title">建築技術規則 <span class="at">@</span> 台中建管 AI</div>
+        <div class="title">   建築技術規則 <span class="at">@</span> 台中建管 AI</div>
         
         <!-- 控制項在手機版會放入此 div -->
         <div class="mobile-controls">
