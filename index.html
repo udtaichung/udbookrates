@@ -1203,5 +1203,37 @@
         }
       });
     </script>
+
+    <!-- 留言板表單泡泡按鈕 -->
+    <style>
+        #feedbackBubble {
+            position: fixed;
+            bottom: 80pt;
+            left: 5pt;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            user-select: none;
+            transition: none;
+            z-index: 10020;
+        }
+        #feedbackBubble:hover {
+            background: transparent;
+            box-shadow: none;
+        }
+    </style>
+    <div id="feedbackBubble" title="留言板表單">📩</div>
+    <script>
+        document.getElementById('feedbackBubble').addEventListener('click', function() {
+            window.open('https://forms.gle/H7KifRFkDpkE5A4r6', '_blank');
+        });
+    </script>
 </body>
 </html>
